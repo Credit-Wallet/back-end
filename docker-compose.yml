@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8.4.0
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+    ports:
+      - $MYSQL_LOCAL_PORT:$MYSQL_DOCKER_PORT
+    volumes:
+      - .docker/data/db:/var/lib/mysql
+    networks:
+      - credit-wallet
+
+networks:
+  credit-wallet:
+    driver: bridge

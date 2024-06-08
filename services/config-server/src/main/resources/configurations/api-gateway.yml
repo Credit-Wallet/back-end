@@ -1,0 +1,37 @@
+server:
+  port: 8888
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: account-service
+          uri: lb://ACCOUNT-SERVICE
+          predicates:
+            - Path=${app.api-prefix}/accounts/**
+          filters:
+            - StripPrefix=2
+        - id: wallet-service
+          uri: lb://WALLET-SERVICE
+          predicates:
+            - Path=${app.api-prefix}/wallets/**
+          filters:
+            - StripPrefix=2
+        - id: network-service
+          uri: lb://NETWORK-SERVICE
+          predicates:
+            - Path=${app.api-prefix}/networks/**
+          filters:
+            - StripPrefix=2
+        - id: transaction-service
+          uri: lb://TRANSACTION-SERVICE
+          predicates:
+            - Path=${app.api-prefix}/transactions/**
+          filters:
+            - StripPrefix=2
+
+app:
+  api-prefix: /api/v1
