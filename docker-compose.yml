@@ -12,118 +12,118 @@ services:
     networks:
       - mysql
 
-  discovery-service:
-    build:
-      context: ./services/discovery-service
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - config-server
-    ports:
-      - $DISCOVERY_SERVER_LOCAL_PORT:$DISCOVERY_SERVER_DOCKER_PORT
-    networks:
-      - credit-wallet
-    environment:
-      - EURKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka
+#  discovery-service:
+#    build:
+#      context: ./services/discovery-service
+#      dockerfile: Dockerfile
+#    restart: unless-stopped
+#    depends_on:
+#      - config-server
+#    ports:
+#      - $DISCOVERY_SERVER_LOCAL_PORT:$DISCOVERY_SERVER_DOCKER_PORT
+#    networks:
+#      - credit-wallet
+#    environment:
+#      - EURKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka
+#
+#  config-server:
+#    build:
+#      context: ./services/config-server
+#      dockerfile: Dockerfile
+#    restart: unless-stopped
+#    ports:
+#      - $CONFIG_SERVER_LOCAL_PORT:$CONFIG_SERVER_DOCKER_PORT
+#    networks:
+#      - credit-wallet
 
-  config-server:
-    build:
-      context: ./services/config-server
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - $CONFIG_SERVER_LOCAL_PORT:$CONFIG_SERVER_DOCKER_PORT
-    networks:
-      - credit-wallet
+#  wallet:
+#    build:
+#      context: ./services/wallet-service
+#      dockerfile: Dockerfile
+#    restart: unless-stopped
+#    depends_on:
+#      - mysql
+#      - discovery-service
+#      - config-server
+#    ports:
+#      - $WALLET_LOCAL_PORT:$WALLET_DOCKER_PORT
+#    networks:
+#      - credit-wallet
+#      - mysql
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:$MYSQL_DOCKER_PORT/$WALLET_DATABASE_NAME
+#      SPRING_DATASOURCE_USERNAME: $MYSQL_USERNAME
+#      SPRING_DATASOURCE_PASSWORD: $MYSQL_ROOT_PASSWORD
+#
+#  transaction:
+#    build:
+#      context: ./services/transaction-service
+#      dockerfile: Dockerfile
+#    restart: unless-stopped
+#    depends_on:
+#      - mysql
+#      - discovery-service
+#      - config-server
+#    ports:
+#      - $TRANSACTION_LOCAL_PORT:$TRANSACTION_DOCKER_PORT
+#    networks:
+#      - credit-wallet
+#      - mysql
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:$MYSQL_DOCKER_PORT/$TRANSACTION_DATABASE_NAME
+#      SPRING_DATASOURCE_USERNAME: $MYSQL_USERNAME
+#      SPRING_DATASOURCE_PASSWORD: $MYSQL_ROOT_PASSWORD
+#
+#  account:
+#    build:
+#      context: ./services/account-service
+#      dockerfile: Dockerfile
+#    restart: unless-stopped
+#    depends_on:
+#      - mysql
+#      - discovery-service
+#      - config-server
+#    ports:
+#      - $ACCOUNT_LOCAL_PORT:$ACCOUNT_DOCKER_PORT
+#    networks:
+#      - credit-wallet
+#      - mysql
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:$MYSQL_DOCKER_PORT/$ACCOUNT_DATABASE_NAME
+#      SPRING_DATASOURCE_USERNAME: $MYSQL_USERNAME
+#      SPRING_DATASOURCE_PASSWORD: $MYSQL_ROOT_PASSWORD
+#
+#  network:
+#    build:
+#      context: ./services/network-service
+#      dockerfile: Dockerfile
+#    restart: unless-stopped
+#    depends_on:
+#      - mysql
+#      - discovery-service
+#      - config-server
+#    ports:
+#      - $NETWORK_LOCAL_PORT:$NETWORK_DOCKER_PORT
+#    networks:
+#      - credit-wallet
+#      - mysql
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:$MYSQL_DOCKER_PORT/$NETWORK_DATABASE_NAME
+#      SPRING_DATASOURCE_USERNAME: $MYSQL_USERNAME
+#      SPRING_DATASOURCE_PASSWORD: $MYSQL_ROOT_PASSWORD
 
-  wallet:
-    build:
-      context: ./services/wallet-service
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - mysql
-      - discovery-service
-      - config-server
-    ports:
-      - $WALLET_LOCAL_PORT:$WALLET_DOCKER_PORT
-    networks:
-      - credit-wallet
-      - mysql
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:$MYSQL_DOCKER_PORT/$WALLET_DATABASE_NAME
-      SPRING_DATASOURCE_USERNAME: $MYSQL_USERNAME
-      SPRING_DATASOURCE_PASSWORD: $MYSQL_ROOT_PASSWORD
-
-  transaction:
-    build:
-      context: ./services/transaction-service
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - mysql
-      - discovery-service
-      - config-server
-    ports:
-      - $TRANSACTION_LOCAL_PORT:$TRANSACTION_DOCKER_PORT
-    networks:
-      - credit-wallet
-      - mysql
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:$MYSQL_DOCKER_PORT/$TRANSACTION_DATABASE_NAME
-      SPRING_DATASOURCE_USERNAME: $MYSQL_USERNAME
-      SPRING_DATASOURCE_PASSWORD: $MYSQL_ROOT_PASSWORD
-
-  account:
-    build:
-      context: ./services/account-service
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - mysql
-      - discovery-service
-      - config-server
-    ports:
-      - $ACCOUNT_LOCAL_PORT:$ACCOUNT_DOCKER_PORT
-    networks:
-      - credit-wallet
-      - mysql
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:$MYSQL_DOCKER_PORT/$ACCOUNT_DATABASE_NAME
-      SPRING_DATASOURCE_USERNAME: $MYSQL_USERNAME
-      SPRING_DATASOURCE_PASSWORD: $MYSQL_ROOT_PASSWORD
-
-  network:
-    build:
-      context: ./services/network-service
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - mysql
-      - discovery-service
-      - config-server
-    ports:
-      - $NETWORK_LOCAL_PORT:$NETWORK_DOCKER_PORT
-    networks:
-      - credit-wallet
-      - mysql
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:$MYSQL_DOCKER_PORT/$NETWORK_DATABASE_NAME
-      SPRING_DATASOURCE_USERNAME: $MYSQL_USERNAME
-      SPRING_DATASOURCE_PASSWORD: $MYSQL_ROOT_PASSWORD
-
-  api-gateway:
-    build:
-      context: ./services/api-gateway
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - discovery-service
-      - config-server
-    ports:
-      - $API_GATEWAY_LOCAL_PORT:$API_GATEWAY_DOCKER_PORT
-    networks:
-      - credit-wallet
+#  api-gateway:
+#    build:
+#      context: ./services/api-gateway
+#      dockerfile: Dockerfile
+#    restart: unless-stopped
+#    depends_on:
+#      - discovery-service
+#      - config-server
+#    ports:
+#      - $API_GATEWAY_LOCAL_PORT:$API_GATEWAY_DOCKER_PORT
+#    networks:
+#      - credit-wallet
 
 
 networks:
