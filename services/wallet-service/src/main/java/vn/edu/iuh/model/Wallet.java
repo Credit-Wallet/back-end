@@ -11,11 +11,12 @@ import lombok.*;
 @Setter
 @Getter
 @Builder
-@Entity(name = "account_networks")
-public class AccountNetwork {
+@Entity(name = "wallets")
+public class Wallet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long accountId;
+    private double balance;
     private Long networkId;
 }
