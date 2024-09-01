@@ -141,4 +141,9 @@ public class AuthService {
 
         return signedJWT;
     }
+
+    public AccountResponse getAccountById(Long id) {
+        return accountMapper.toAccountResponse(accountRepository.findById(id).orElseThrow(() ->
+                new AppException(ErrorCode.ACCOUNT_NOT_FOUND)));
+    }
 }

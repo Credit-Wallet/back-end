@@ -8,6 +8,9 @@ import vn.edu.iuh.exception.ErrorCode;
 import vn.edu.iuh.model.Wallet;
 import vn.edu.iuh.repository.WalletRepository;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RequiredArgsConstructor
 @Service
 public class WalletService {
@@ -21,6 +24,9 @@ public class WalletService {
                 .networkId(networkId)
                 .balance(0)
                 .build();
+        if (walletRepository.existsByAccountIdAndNetworkId(wallet.getAccountId(), wallet.getNetworkId())) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
         return walletRepository.save(wallet);
     }
 
@@ -33,5 +39,13 @@ public class WalletService {
         var wallet = getWallet(accountId, networkId);
         wallet.setBalance(wallet.getBalance() + amount);
         return walletRepository.save(wallet);
+    }
+
+    public List<Long> getNetworkIdsByAccount(String token) {
+        var account = accountClient.getProfile(token).getResult();
+        return walletRepository.findByAccountId(account.getId())
+                .stream()
+                .map(Wallet::getNetworkId)
+                .collect(Collectors.toList());
     }
 }

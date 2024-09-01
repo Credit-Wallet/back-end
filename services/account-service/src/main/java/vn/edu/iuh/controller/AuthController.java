@@ -52,4 +52,13 @@ public class AuthController {
                         .build()
         );
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> getAccountById(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .result(authService.getAccountById(id))
+                        .build()
+        );
+    }
 }

@@ -7,6 +7,7 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.GET;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NetworkController {
     private final NetworkService networkService;
+
+    @GetMapping()
+    public ApiResponse<?> getNetworks(@RequestHeader("Authorization") String token) {
+        return ApiResponse.builder()
+                .result(networkService.getNetworks(token))
+                .build();
+    }
+
     @PostMapping()
     public ApiResponse<Network> createNetwork(@RequestBody @Valid CreateNetworkRequest request,@RequestHeader("Authorization") String token) {
         return ApiResponse.<Network>builder()
@@ -66,5 +75,12 @@ public class NetworkController {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<Network> findById(@PathVariable("id") Long id) {
+        return ApiResponse.<Network>builder()
+                .result(networkService.findById(id))
+                .build();
     }
 }

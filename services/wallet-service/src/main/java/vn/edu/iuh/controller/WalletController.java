@@ -6,6 +6,8 @@ import vn.edu.iuh.model.Wallet;
 import vn.edu.iuh.response.ApiResponse;
 import vn.edu.iuh.service.WalletService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/wallets")
 @RequiredArgsConstructor
@@ -15,6 +17,30 @@ public class WalletController {
     public ApiResponse<Wallet> createWallet(@RequestParam("networkId") Long networkId, @RequestHeader("Authorization") String token) {
         return ApiResponse.<Wallet>builder()
                 .result(walletService.createWallet(networkId, token))
+                .build();
+    }
+
+    @GetMapping("/{accountId}/{networkId}")
+    public ApiResponse<Wallet> getWallet(@PathVariable("accountId") Long accountId,
+                                         @PathVariable("networkId") Long networkId) {
+        return ApiResponse.<Wallet>builder()
+                .result(walletService.getWallet(accountId, networkId))
+                .build();
+    }
+
+    @PutMapping("/{accountId}/{networkId}/update-balance/{amount}")
+    public ApiResponse<Wallet> updateBalance(@PathVariable("accountId") Long accountId,
+                                             @PathVariable("networkId") Long networkId,
+                                             @PathVariable("amount") double amount) {
+        return ApiResponse.<Wallet>builder()
+                .result(walletService.updateBalance(accountId, networkId, amount))
+                .build();
+    }
+
+    @GetMapping("/network_ids")
+    public ApiResponse<List<Long>> getNetworkIdsByAccount(@RequestHeader("Authorization") String token) {
+        return ApiResponse.<List<Long>>builder()
+                .result(walletService.getNetworkIdsByAccount(token))
                 .build();
     }
 }
