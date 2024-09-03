@@ -48,4 +48,12 @@ public class WalletService {
                 .map(Wallet::getNetworkId)
                 .collect(Collectors.toList());
     }
+
+    public List<Long> getAccountIdsByNetwork(Long networkId,String token) {
+        var account = accountClient.getProfile(token).getResult();
+        return walletRepository.findByNetworkId(networkId)
+                .stream().map(Wallet::getAccountId)
+                .filter(accountId -> !accountId.equals(account.getId()))
+                .collect(Collectors.toList());
+    }
 }

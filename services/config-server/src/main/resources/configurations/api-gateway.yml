@@ -14,6 +14,12 @@ spring:
             - Path=${app.api-prefix}/auth/**
           filters:
             - StripPrefix=2
+        - id: account-service
+          uri: lb://ACCOUNT-SERVICE
+          predicates:
+            - Path=${app.api-prefix}/accounts/**
+          filters:
+            - StripPrefix=2
         - id: wallet-service
           uri: lb://WALLET-SERVICE
           predicates:

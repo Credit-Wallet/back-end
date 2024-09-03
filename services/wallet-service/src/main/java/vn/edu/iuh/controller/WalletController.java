@@ -43,4 +43,11 @@ public class WalletController {
                 .result(walletService.getNetworkIdsByAccount(token))
                 .build();
     }
+
+    @GetMapping("/account_ids/{networkId}")
+    public ApiResponse<List<Long>> getAccountIdsByNetwork(@PathVariable("networkId") Long networkId,@RequestHeader("Authorization") String token) {
+        return ApiResponse.<List<Long>>builder()
+                .result(walletService.getAccountIdsByNetwork(networkId,token))
+                .build();
+    }
 }
