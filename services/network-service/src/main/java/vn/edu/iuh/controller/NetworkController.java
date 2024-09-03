@@ -20,7 +20,9 @@ import vn.edu.iuh.service.NetworkService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -51,9 +53,9 @@ public class NetworkController {
     }
 
     @PostMapping("/generate-qr")
-    public ResponseEntity<byte[]> generateQRCode(@RequestParam("networkId") Long networkId) {
+    public ResponseEntity<String> generateQRCode(@RequestParam("networkId") Long networkId) {
         try {
-            String qrData = "http://localhost:8888/api/v1/networks/join?networkId=" + networkId;
+            String qrData = "/networks/join?networkId=" + networkId;
 
             int width = 300;
             int height = 300;
@@ -67,10 +69,12 @@ public class NetworkController {
             MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream);
             byte[] pngData = pngOutputStream.toByteArray();
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_TYPE, "image/png");
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.add(HttpHeaders.CONTENT_TYPE, "image/png");
 
-            return new ResponseEntity<>(pngData, headers, HttpStatus.OK);
+            String base64Image = Base64.getEncoder().encodeToString(pngData);
+
+            return new ResponseEntity<>(base64Image, HttpStatus.OK);
         } catch (WriterException | IOException e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

@@ -8,12 +8,13 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins: "http://localhost:9000"
+            allowedOrigins:
+              - http://localhost:9000
+              - http://192.168.1.7:9500
+              - https://localhost
+              - https://localhost:9500
             allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
+              - "*"
             allowedHeaders:
               - "*"
             allowCredentials: true
