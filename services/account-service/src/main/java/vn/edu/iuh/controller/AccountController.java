@@ -1,16 +1,30 @@
 package vn.edu.iuh.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import vn.edu.iuh.client.WalletClient;
+import vn.edu.iuh.response.ApiResponse;
+import vn.edu.iuh.service.AccountService;
 
 @RestController
-@RequestMapping("/accounts")
 @RequiredArgsConstructor
+@RequestMapping("/accounts")
 public class AccountController {
-    @GetMapping
-    public String hello(){
-        return "Account Service Hello";
+    private final WalletClient walletClient;
+    private final AccountService accountService;
+
+    @GetMapping("/network/{networkId}")
+    public ApiResponse<?> getAccounts(@PathVariable("networkId") Long networkId, @RequestHeader("Authorization") String token) {
+        var accountIds = walletClient.getAccountIdsByNetwork(networkId, token);
+        return ApiResponse.builder()
+                .result(accountService.getAccounts(accountIds.getResult()))
+                .build();
+    }
+
+    @PutMapping("/update-selected-network/{networkId}")
+    public ApiResponse<?> updateSelectedNetwork(@PathVariable("networkId") Long networkId) {
+        return ApiResponse.builder()
+                .result(accountService.updateSelectedNetwork(networkId))
+                .build();
     }
 }

@@ -3,3 +3,19 @@ spring:
     import: optional:configserver:http://localhost:8000
   application:
     name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - http://localhost:9000
+              - http://192.168.1.7:9500
+              - https://localhost
+              - https://localhost:9500
+              - https://192.168.1.129:9500
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
