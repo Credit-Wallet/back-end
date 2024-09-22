@@ -13,7 +13,7 @@ public class AccountController {
     private final WalletClient walletClient;
     private final AccountService accountService;
 
-    @GetMapping("/{networkId}")
+    @GetMapping("/network/{networkId}")
     public ApiResponse<?> getAccounts(@PathVariable("networkId") Long networkId, @RequestHeader("Authorization") String token) {
         var accountIds = walletClient.getAccountIdsByNetwork(networkId, token);
         return ApiResponse.builder()
@@ -27,6 +27,4 @@ public class AccountController {
                 .result(accountService.updateSelectedNetwork(networkId))
                 .build();
     }
-
-
 }

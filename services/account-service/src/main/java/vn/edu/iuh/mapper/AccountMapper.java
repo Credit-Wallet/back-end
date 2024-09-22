@@ -20,6 +20,7 @@ public class AccountMapper {
                 .id(account.getId())
                 .username(account.getUsername())
                 .email(account.getEmail())
+                .selectedNetworkId(account.getSelectedNetworkId())
                 .build();
     }
 }
