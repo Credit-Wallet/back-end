@@ -1,6 +1,7 @@
 spring:
   config:
-    import: optional:configserver:http://localhost:8000
+    import: optional:configserver:http://config-server:8000
+    name: api-gateway
   application:
     name: api-gateway
   cloud:
@@ -19,3 +20,7 @@ spring:
             allowedHeaders:
               - "*"
             allowCredentials: true
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-service:8761/eureka/

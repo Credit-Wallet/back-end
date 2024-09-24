@@ -11,7 +11,7 @@ import vn.edu.iuh.client.AccountClient;
 public class WebClientConfig {
     @Bean
     WebClient webClient(){
-        return WebClient.builder().baseUrl("http://localhost:8001/auth").build();
+        return WebClient.builder().baseUrl("http://account-service:8001/auth").build();
     }
     @Bean
     AccountClient accountClient(WebClient webClient){

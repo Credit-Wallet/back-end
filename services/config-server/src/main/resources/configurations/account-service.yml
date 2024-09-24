@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/account
+    url: jdbc:mysql://mysql:3306/account
     username: root
     password: 123456
   jpa:
@@ -13,6 +13,10 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  cloud:
+    config:
+      fail-fast: false
+
 jwt:
   signerKey: "1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij"
   valid-duration: 3600
