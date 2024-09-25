@@ -17,3 +17,8 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger-ui
+
+eureka:
+  instance:
+    hostname: network-service
+    prefer-ip-address: false

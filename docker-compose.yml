@@ -17,6 +17,7 @@ services:
       context: ./services/discovery-service
       dockerfile: Dockerfile
     restart: unless-stopped
+    hostname: discovery-service
     depends_on:
       - config-server
     ports:
@@ -32,6 +33,7 @@ services:
       context: ./services/config-server
       dockerfile: Dockerfile
     restart: unless-stopped
+    hostname: config-server
     depends_on:
       - mysql
     ports:
@@ -44,6 +46,7 @@ services:
       context: ./services/wallet-service
       dockerfile: Dockerfile
     restart: unless-stopped
+    hostname: wallet-service
     depends_on:
       - mysql
       - discovery-service
@@ -63,6 +66,7 @@ services:
       context: ./services/transaction-service
       dockerfile: Dockerfile
     restart: unless-stopped
+    hostname: transaction-service
     depends_on:
       - mysql
       - discovery-service
@@ -82,6 +86,7 @@ services:
       context: ./services/account-service
       dockerfile: Dockerfile
     restart: unless-stopped
+    hostname: account-service
     depends_on:
       - mysql
       - discovery-service
@@ -101,6 +106,7 @@ services:
       context: ./services/network-service
       dockerfile: Dockerfile
     restart: unless-stopped
+    hostname: network-service
     depends_on:
       - mysql
       - discovery-service
@@ -120,6 +126,7 @@ services:
       context: ./services/api-gateway
       dockerfile: Dockerfile
     restart: unless-stopped
+    hostname: api-gateway-service
     depends_on:
       - discovery-service
       - config-server

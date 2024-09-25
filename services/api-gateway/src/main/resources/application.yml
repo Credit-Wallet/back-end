@@ -20,7 +20,3 @@ spring:
             allowedHeaders:
               - "*"
             allowCredentials: true
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://discovery-service:8761/eureka/

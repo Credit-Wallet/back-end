@@ -38,6 +38,18 @@ spring:
             - Path=${app.api-prefix}/transactions/**
           filters:
             - StripPrefix=2
-
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-service:8761/eureka/
 app:
   api-prefix: /api/v1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: gateway, routes, health, info
+  endpoint:
+    gateway:
+      enabled: true

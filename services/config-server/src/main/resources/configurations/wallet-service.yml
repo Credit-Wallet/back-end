@@ -17,3 +17,8 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger-ui
+
+eureka:
+  instance:
+    hostname: wallet-service
+    prefer-ip-address: false

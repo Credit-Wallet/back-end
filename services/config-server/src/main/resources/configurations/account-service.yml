@@ -13,9 +13,6 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-  cloud:
-    config:
-      fail-fast: false
 
 jwt:
   signerKey: "1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij"
@@ -24,3 +21,8 @@ jwt:
 springdoc:
   swagger-ui:
     path: /swagger-uis
+
+eureka:
+  instance:
+    hostname: account-service
+    prefer-ip-address: false
