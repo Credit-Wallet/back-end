@@ -13,5 +13,6 @@ RUN ./gradlew build -x test
 FROM eclipse-temurin:17-jre-alpine AS production
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
+COPY src/main/resources/configurations /app/configurations
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

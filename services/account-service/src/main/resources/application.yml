@@ -1,27 +1,9 @@
 spring:
   config:
-    import: optional:configserver:http://config-server:8000
+    import: optional:configserver:http://config-server.internal:8000
   application:
     name: account-service
-#server:
-#  port: 8001
-#spring:
-#  datasource:
-#    url: jdbc:mysql://localhost:3306/account
-#    username: root
-#    password: 123456
-#  jpa:
-#    properties:
-#      hibernate:
-#        dialect: org.hibernate.dialect.MySQL8Dialect
-#    hibernate:
-#      ddl-auto: update
-#    show-sql: true
-#
-#jwt:
-#  signerKey: "1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij"
-#  valid-duration: 3600
-
-#springdoc:
-#  swagger-ui:
-#    path: /swagger-ui
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-service.internal:8761/eureka/

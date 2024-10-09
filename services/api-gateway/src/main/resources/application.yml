@@ -1,7 +1,6 @@
 spring:
   config:
-    import: optional:configserver:http://config-server:8000
-    name: api-gateway
+    import: optional:configserver:http://config-server.internal:8000
   application:
     name: api-gateway
   cloud:

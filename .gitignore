@@ -1,3 +1,7 @@
 .env
 .idea
 .docker/data/db
+terraform-dev/hongkong-dev/.terraform
+terraform-dev/hongkong-dev/.terraform.lock.hcl
+terraform-dev/hongkong-dev/terraform.tfstate
+terraform-dev/hongkong-dev/terraform.tfstate.backup

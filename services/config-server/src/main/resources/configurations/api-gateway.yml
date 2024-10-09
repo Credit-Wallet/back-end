@@ -41,7 +41,7 @@ spring:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://discovery-service:8761/eureka/
+      defaultZone: http://discovery-service.internal:8761/eureka/
 app:
   api-prefix: /api/v1
 

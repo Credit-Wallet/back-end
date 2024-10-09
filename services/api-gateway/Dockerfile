@@ -15,4 +15,4 @@ COPY /wait-for-it.sh /wait-for-it.sh
 RUN apk add --no-cache bash
 RUN chmod +x /wait-for-it.sh
 
-ENTRYPOINT ["/wait-for-it.sh", "discovery-service:8761", "--", "java","-jar","app.jar"]
+ENTRYPOINT ["/wait-for-it.sh", "discovery-service.internal:8761", "--", "java","-jar","app.jar"]

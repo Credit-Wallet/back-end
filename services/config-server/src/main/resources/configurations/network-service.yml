@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://mysql:3306/network
+    url: jdbc:mysql://mysql.internal:3306/network
     username: root
     password: 123456
   jpa:
@@ -17,8 +17,3 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger-ui
-
-eureka:
-  instance:
-    hostname: network-service
-    prefer-ip-address: false

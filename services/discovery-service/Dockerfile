@@ -17,4 +17,4 @@ COPY /wait-for-it.sh /wait-for-it.sh
 RUN apk add --no-cache bash
 RUN chmod +x /wait-for-it.sh
 
-ENTRYPOINT ["/wait-for-it.sh", "config-server:8000", "--", "java","-jar","app.jar"]
+ENTRYPOINT ["/wait-for-it.sh", "config-server.internal:8000", "--", "java","-jar","app.jar"]

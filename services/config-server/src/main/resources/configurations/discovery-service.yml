@@ -1,11 +1,11 @@
 eureka:
   instance:
-    hostname: discovery-service
+    hostname: discovery-service.internal
   client:
-    registerWithEureka: false
-    fetchRegistry: false
+    registerWithEureka: true
+    fetchRegistry: true
     serviceUrl:
-      defaultZone: http://discovery-service:8761/eureka/
+      defaultZone: http://discovery-service.internal:8761/eureka/
 
 server:
   port: 8761
@@ -13,13 +13,13 @@ server:
 spring:
   cloud:
     config:
-      uri: http://config-server:8000
+      uri: http://config-server.internal:8000
 
 management:
   endpoints:
     web:
       exposure:
-        include: "info,health,env"
+        include: "*"
   endpoint:
     health:
       show-details: always

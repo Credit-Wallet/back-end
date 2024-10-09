@@ -1,0 +1,13 @@
+region = "ap-east-1"
+availability_zones = [ "ap-east-1a", "ap-east-1c" ]
+cidr_block = "10.0.0.0/16"
+public_subnet_ips = [ "10.0.1.0/24", "10.0.2.0/24" ]
+private_subnet_ips = [ "10.0.10.0/24", "10.0.20.0/24" ]
+ecr_repo_config_server_url = "637423209325.dkr.ecr.ap-east-1.amazonaws.com/config-server:latest"
+ecr_repo_discovery_service_url = "637423209325.dkr.ecr.ap-east-1.amazonaws.com/discovery_service:latest"
+ecr_repo_account_service_url = "637423209325.dkr.ecr.ap-east-1.amazonaws.com/account-service:latest"
+ecr_repo_api_gateway_url = "637423209325.dkr.ecr.ap-east-1.amazonaws.com/api-gateway-service:latest"
+ecr_repo_mysql_url = "637423209325.dkr.ecr.ap-east-1.amazonaws.com/mysql:latest"
+ecr_repo_network_service_url = "637423209325.dkr.ecr.ap-east-1.amazonaws.com/network-service:latest"
+ecr_repo_transaction_service_url = "637423209325.dkr.ecr.ap-east-1.amazonaws.com/transaction-service:latest"
+ecr_repo_wallet_service_url = "637423209325.dkr.ecr.ap-east-1.amazonaws.com/wallet-service:latest"

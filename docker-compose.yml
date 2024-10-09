@@ -25,8 +25,8 @@ services:
     networks:
       - credit-wallet
     environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - SPRING_CLOUD_CONFIG_URI=http://config-server:8000
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service.internal:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-server.internal:8000
 
   config-server:
     build:
