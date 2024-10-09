@@ -12,7 +12,8 @@ import java.sql.Timestamp;
 @Setter
 @Getter
 @Builder
-@Entity(name = "bill_requests")
+@Entity
+@Table(name = "bill_requests")
 public class BillRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

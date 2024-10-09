@@ -12,7 +12,8 @@ import java.sql.Timestamp;
 @Setter
 @Getter
 @Builder
-@Entity(name = "transactions")
+@Entity
+@Table(name = "transactions")
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
