@@ -17,6 +17,12 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final AccountClient accountClient;
 
+    public Wallet getWallet(String token) {
+        var account = accountClient.getProfile(token).getResult();
+        return walletRepository.findByAccountIdAndNetworkId(account.getId(), account.getSelectedNetworkId())
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+    }
+
     public Wallet createWallet(Long networkId,String token) {
         var account = accountClient.getProfile(token).getResult();
         var wallet = Wallet.builder()

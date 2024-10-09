@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @Getter
 @Setter
-public class CreateTransactionDetailRequest {
+public class BillRequest {
     private Long accountId;
     private double amount;
 }

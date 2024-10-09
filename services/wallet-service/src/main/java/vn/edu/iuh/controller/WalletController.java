@@ -13,6 +13,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WalletController {
     private final WalletService walletService;
+
+    @GetMapping()
+    public ApiResponse<Wallet> getWallet(@RequestHeader("Authorization") String token) {
+        return ApiResponse.<Wallet>builder()
+                .result(walletService.getWallet(token))
+                .build();
+    }
+
     @PostMapping()
     public ApiResponse<Wallet> createWallet(@RequestParam("networkId") Long networkId, @RequestHeader("Authorization") String token) {
         return ApiResponse.<Wallet>builder()
