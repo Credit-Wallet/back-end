@@ -38,6 +38,13 @@ spring:
             - Path=${app.api-prefix}/transactions/**
           filters:
             - StripPrefix=2
+        - id: transaction-service
+          uri: lb://TRANSACTION-SERVICE
+          predicates:
+            - Path=${app.api-prefix}/bills/**
+          filters:
+            - StripPrefix=2
+
 eureka:
   client:
     serviceUrl:

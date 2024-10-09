@@ -13,6 +13,7 @@ public class NetworkMapper {
                 .maxBalance(request.getMaxBalance())
                 .maxMember(request.getMaxMember())
                 .currency(request.getCurrency())
+                .description(request.getDescription())
                 .build();
     }
 }
