@@ -16,4 +16,5 @@ public class CreateNetworkRequest {
     private double maxBalance;
     private Long maxMember;
     private Currency currency;
+    private String description;
 }

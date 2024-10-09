@@ -10,11 +10,9 @@ import java.util.Set;
 @Builder
 @Getter
 @Setter
-public class CreateTransactionRequest {
+public class CreateBillRequest {
     private String name;
     private double amount;
-    private boolean allMember;
-    private boolean divideEqually;
-    private Set<CreateTransactionDetailRequest> transactionDetails = new HashSet<>();
+    private Set<BillRequest> billRequests = new HashSet<>();
     private Long networkId;
 }

@@ -2,6 +2,10 @@ package vn.edu.iuh.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.sql.Timestamp;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,4 +22,9 @@ public class Account {
     private String email;
     private String password;
     private Long selectedNetworkId;
+    @CreationTimestamp
+    @Column
+    private Timestamp createdAt;
+    @UpdateTimestamp
+    private Timestamp updatedAt;
 }
