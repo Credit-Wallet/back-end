@@ -1,6 +1,10 @@
 package vn.edu.iuh.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.client.AccountClient;
 import vn.edu.iuh.client.WalletClient;
@@ -17,6 +21,7 @@ import vn.edu.iuh.repository.TransactionRepository;
 import vn.edu.iuh.request.CancelBillRequest;
 import vn.edu.iuh.request.CreateBillRequest;
 
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,6 +34,20 @@ public class BillService {
     private final BillRepository billRepository;
     private final BillRequestRepository billRequestRepository;
     private final WalletClient walletClient;
+
+    public Page<Bill> getBills(String token, Timestamp fromDate, Timestamp toDate,Status status, int page, int limit) {
+        var account = accountClient.getProfile(token).getResult();
+
+        Pageable pageable = PageRequest.of(page, limit, Sort.by("createdAt").descending());
+        return billRepository.findByAccountIdAndNetworkIdAndTimestampBetween(
+                account.getId(),
+                account.getSelectedNetworkId(),
+                status,
+                fromDate,
+                toDate,
+                pageable
+        );
+    }
 
     public Bill createBill(CreateBillRequest request, String token){
         var account = accountClient.getProfile(token).getResult();
