@@ -44,6 +44,12 @@ spring:
             - Path=${app.api-prefix}/bills/**
           filters:
             - StripPrefix=2
+        - id: transaction-service
+          uri: lb://TRANSACTION-SERVICE
+          predicates:
+            - Path=${app.api-prefix}/bill-requests/**
+          filters:
+            - StripPrefix=2
 
 app:
   api-prefix: /api/v1
