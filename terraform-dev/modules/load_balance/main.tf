@@ -66,6 +66,16 @@ resource "aws_lb_target_group" "api_gateway_service_target_group" {
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"
+
+  health_check {
+    port               = "traffic-port"
+    protocol           = "HTTP"
+    path               = "/api/v1/health"
+    interval           = 30
+    timeout            = 5
+    healthy_threshold  = 2
+    unhealthy_threshold = 3
+  }
 }
 
 # Listener Rule for Discovery Service
