@@ -7,8 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.client.AccountClient;
+import vn.edu.iuh.exception.AppException;
+import vn.edu.iuh.exception.ErrorCode;
+import vn.edu.iuh.mapper.TransactionMapper;
 import vn.edu.iuh.model.Transaction;
 import vn.edu.iuh.repository.TransactionRepository;
+import vn.edu.iuh.response.AccountResponse;
+import vn.edu.iuh.response.TransactionResponse;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -18,18 +23,39 @@ import java.util.List;
 public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountClient accountClient;
+    private final TransactionMapper transactionMapper;
 
-    public Page<Transaction> getTransactions(String token, Timestamp fromDate, Timestamp toDate, int page, int limit) {
+    public Page<TransactionResponse> getTransactions(String token, Timestamp fromDate, Timestamp toDate, int page, int limit) {
         var account = accountClient.getProfile(token).getResult();
 
         Pageable pageable = PageRequest.of(page, limit, Sort.by("createdAt").descending());
 
-        return transactionRepository.findByAccountIdAndNetworkIdAndTimestampBetween(
+        var transactions =  transactionRepository.findByAccountIdAndNetworkIdAndTimestampBetween(
                 account.getId(),
                 account.getSelectedNetworkId(),
                 fromDate,
                 toDate,
                 pageable
         );
+        return transactions.map(transaction -> {
+            AccountResponse fromAccount = accountClient.getAccountById(transaction
+                    .getFromAccountId()).getResult();
+            AccountResponse toAccount = accountClient.getAccountById(transaction
+                    .getToAccountId()).getResult();
+            return transactionMapper.toResponse(transaction, fromAccount, toAccount);
+        });
+    }
+
+    public Transaction findById(Long id) {
+        return transactionRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.NOT_FOUND)
+        );
+    }
+
+    public TransactionResponse getTransactionById(Long id){
+        Transaction transaction = findById(id);
+        AccountResponse fromAccount = accountClient.getAccountById(transaction.getFromAccountId()).getResult();
+        AccountResponse toAccount = accountClient.getAccountById(transaction.getToAccountId()).getResult();
+        return transactionMapper.toResponse(transaction, fromAccount, toAccount);
     }
 }

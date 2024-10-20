@@ -16,7 +16,8 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCH(400, "Password not match", HttpStatus.BAD_REQUEST),
     ACCOUNT_EXISTED(400, "Account existed", HttpStatus.BAD_REQUEST),
     BILL_REQUEST_NOT_PROCESSED(900, "Bill request not processed", HttpStatus.BAD_REQUEST),
-    BILL_REQUEST_NOT_PENDING(901, "Bill request not pending", HttpStatus.BAD_REQUEST),;
+    BILL_REQUEST_NOT_PENDING(901, "Bill request not pending", HttpStatus.BAD_REQUEST),
+    BILL_NOT_PENDING(902, "Bill not pending", HttpStatus.BAD_REQUEST),;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
