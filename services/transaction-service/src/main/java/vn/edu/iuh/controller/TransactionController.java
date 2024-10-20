@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.model.Transaction;
 import vn.edu.iuh.response.ApiResponse;
+import vn.edu.iuh.response.TransactionResponse;
 import vn.edu.iuh.service.TransactionService;
 
 import java.sql.Timestamp;
@@ -18,7 +19,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @GetMapping()
-    public ApiResponse<Page<Transaction>> getTransactions(
+    public ApiResponse<Page<TransactionResponse>> getTransactions(
             @RequestHeader("Authorization") String token,
             @RequestParam(required = false) Timestamp fromDate,
             @RequestParam(required = false) Timestamp toDate,
@@ -26,7 +27,15 @@ public class TransactionController {
             @RequestParam(defaultValue = "10") int limit
     ) {
         var result = transactionService.getTransactions(token, fromDate, toDate, page, limit);
-        return ApiResponse.<Page<Transaction>>builder()
+        return ApiResponse.<Page<TransactionResponse>>builder()
+                .result(result)
+                .build();
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<TransactionResponse> getTransactionById(@PathVariable Long id){
+        var result = transactionService.getTransactionById(id);
+        return ApiResponse.<TransactionResponse>builder()
                 .result(result)
                 .build();
     }

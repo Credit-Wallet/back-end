@@ -12,6 +12,7 @@ import vn.edu.iuh.model.Transaction;
 import vn.edu.iuh.request.CancelBillRequest;
 import vn.edu.iuh.request.CreateBillRequest;
 import vn.edu.iuh.response.ApiResponse;
+import vn.edu.iuh.response.BillResponse;
 import vn.edu.iuh.service.BillService;
 
 import java.sql.Timestamp;
@@ -23,7 +24,7 @@ public class BillController {
     private final BillService billService;
 
     @GetMapping()
-    public ApiResponse<Page<Bill>> getTransactions(
+    public ApiResponse<Page<BillResponse>> getTransactions(
             @RequestHeader("Authorization") String token,
             @RequestParam(required = false) Timestamp fromDate,
             @RequestParam(required = false) Timestamp toDate,
@@ -32,7 +33,7 @@ public class BillController {
             @RequestParam(defaultValue = "10") int limit
     ) {
         var result = billService.getBills(token, fromDate, toDate,status, page, limit);
-        return ApiResponse.<Page<Bill>>builder()
+        return ApiResponse.<Page<BillResponse>>builder()
                 .result(result)
                 .build();
     }
@@ -41,6 +42,15 @@ public class BillController {
     public ApiResponse<Bill> createTransaction(@Valid @RequestBody CreateBillRequest request,
                                                @RequestHeader("Authorization") String token) {
         var result = billService.createBill(request, token);
+        return ApiResponse.<Bill>builder()
+                .result(result)
+                .build();
+    }
+
+    @PostMapping("/cancel/{id}")
+    public ApiResponse<Bill> cancelTransaction(@PathVariable("id") Long id,
+                                               @RequestHeader("Authorization") String token) {
+        var result = billService.cancelBill(id, token);
         return ApiResponse.<Bill>builder()
                 .result(result)
                 .build();
@@ -73,9 +83,9 @@ public class BillController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<Bill> getTransaction(@PathVariable("id") Long id) {
-        var result = billService.findById(id);
-        return ApiResponse.<Bill>builder()
+    public ApiResponse<BillResponse> getBillById(@PathVariable("id") Long id) {
+        var result = billService.getBillById(id);
+        return ApiResponse.<BillResponse>builder()
                 .result(result)
                 .build();
     }
