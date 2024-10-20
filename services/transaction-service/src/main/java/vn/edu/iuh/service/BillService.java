@@ -11,6 +11,8 @@ import vn.edu.iuh.client.WalletClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
 import vn.edu.iuh.mapper.BillMapper;
+import vn.edu.iuh.mapper.BillRequestMapper;
+import vn.edu.iuh.mapper.TransactionMapper;
 import vn.edu.iuh.model.Bill;
 import vn.edu.iuh.model.BillRequest;
 import vn.edu.iuh.model.Status;
@@ -21,10 +23,12 @@ import vn.edu.iuh.repository.TransactionRepository;
 import vn.edu.iuh.request.CancelBillRequest;
 import vn.edu.iuh.request.CreateBillRequest;
 import vn.edu.iuh.response.BillResponse;
+import vn.edu.iuh.response.TransactionResponse;
 
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -35,6 +39,8 @@ public class BillService {
     private final BillRepository billRepository;
     private final BillRequestRepository billRequestRepository;
     private final WalletClient walletClient;
+    private final BillRequestMapper billRequestMapper;
+    private final TransactionMapper transactionMapper;
 
     public Page<BillResponse> getBills(String token, Timestamp fromDate, Timestamp toDate,Status status, int page, int limit) {
         var account = accountClient.getProfile(token).getResult();
@@ -50,7 +56,16 @@ public class BillService {
         );
         return bills.map(bill -> {
             var accountResponse = accountClient.getAccountById(bill.getAccountId()).getResult();
-            return billMapper.toBillResponse(bill, accountResponse);
+            var billRequestResponses = bill.getBillRequests().stream().map(billRequest -> {
+                var accountRequest = accountClient.getAccountById(billRequest.getAccountId()).getResult();
+                return billRequestMapper.toBillRequestResponse(billRequest, accountRequest);
+            });
+            var transactionResponses = bill.getTransactions().stream().map(transaction -> {
+                var fromAccount = accountClient.getAccountById(transaction.getFromAccountId()).getResult();
+                var toAccount = accountClient.getAccountById(transaction.getToAccountId()).getResult();
+                return transactionMapper.toResponse(transaction, fromAccount, toAccount);
+            });
+            return billMapper.toBillResponse(bill, accountResponse, transactionResponses.collect(Collectors.toSet()), billRequestResponses.collect(Collectors.toSet()));
         });
     }
 
@@ -134,7 +149,16 @@ public class BillService {
     public BillResponse getBillById(Long id){
         Bill bill = findById(id);
         var account = accountClient.getAccountById(bill.getAccountId()).getResult();
-        return billMapper.toBillResponse(bill, account);
+        var billRequestResponses = bill.getBillRequests().stream().map(billRequest -> {
+            var accountRequest = accountClient.getAccountById(billRequest.getAccountId()).getResult();
+            return billRequestMapper.toBillRequestResponse(billRequest, accountRequest);
+        });
+        var transactionResponses = bill.getTransactions().stream().map(transaction -> {
+            var fromAccount = accountClient.getAccountById(transaction.getFromAccountId()).getResult();
+            var toAccount = accountClient.getAccountById(transaction.getToAccountId()).getResult();
+            return transactionMapper.toResponse(transaction, fromAccount, toAccount);
+        });
+        return billMapper.toBillResponse(bill, account,transactionResponses.collect(Collectors.toSet()), billRequestResponses.collect(Collectors.toSet()));
     }
 
     private double processBill(Bill bill){
