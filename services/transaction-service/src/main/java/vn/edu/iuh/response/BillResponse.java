@@ -20,8 +20,8 @@ public class BillResponse {
     private Long accountId;
     private double amount;
     private double actualAmount;
-    private Set<Transaction> transactions;
-    private Set<BillRequest> billRequests;
+    private Set<TransactionResponse> transactions;
+    private Set<BillRequestResponse> billRequests;
     private Long networkId;
     private Status status;
     private String createdAt;
