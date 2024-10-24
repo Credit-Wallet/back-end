@@ -61,4 +61,14 @@ public class AuthController {
                         .build()
         );
     }
+    
+    //logout
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<?>> logout(@RequestHeader("Authorization") String token) {
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .result(authService.logout(token))
+                        .build()
+        );
+    }
 }

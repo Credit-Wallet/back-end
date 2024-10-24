@@ -146,4 +146,10 @@ public class AuthService {
         return accountMapper.toAccountResponse(accountRepository.findById(id).orElseThrow(() ->
                 new AppException(ErrorCode.ACCOUNT_NOT_FOUND)));
     }
+
+    //logout
+    public String logout(String token) {
+        SecurityContextHolder.clearContext();
+        return "Logout success";
+    }
 }
