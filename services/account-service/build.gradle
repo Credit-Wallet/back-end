@@ -36,6 +36,8 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 //	implementation 'org.flywaydb:flyway-core'
 //	implementation 'org.flywaydb:flyway-mysql'
+    //firebase
+    implementation 'com.google.firebase:firebase-admin:8.2.0'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
