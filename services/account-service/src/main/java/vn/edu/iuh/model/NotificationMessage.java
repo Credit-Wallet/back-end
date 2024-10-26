@@ -9,6 +9,7 @@ public class NotificationMessage {
     private String title;
     private String body;
     private String image;
-    private String recipientToken;
+    private Long accountId;
     private Map<String, String> data;
+    private TypeNotification type;
 }

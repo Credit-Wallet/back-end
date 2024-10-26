@@ -23,10 +23,11 @@ import vn.edu.iuh.repository.TransactionRepository;
 import vn.edu.iuh.request.CancelBillRequest;
 import vn.edu.iuh.request.CreateBillRequest;
 import vn.edu.iuh.response.BillResponse;
-import vn.edu.iuh.response.TransactionResponse;
+import vn.edu.iuh.request.NotificationMessageRequest;
 
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -84,6 +85,22 @@ public class BillService {
                             .bill(bill)
                             .build()
             );
+
+            NotificationMessageRequest notificationMessageResponse = NotificationMessageRequest
+                    .builder()
+                    .accountId(billRequest.getAccountId())
+                    .title("You have a new bill request")
+                    .body("You have a new bill request from " + account.getUsername())
+                    .recipientToken(null)
+                    .type(vn.edu.iuh.model.TypeNotification.BILL_REQUEST)
+                    .data(null)
+                    .build();
+
+            // If you are the creator then do not send
+            if (!bill.getAccountId().equals(billRequest.getAccountId()))
+            {
+                accountClient.sendNotification(notificationMessageResponse);
+            }
         }
         bill.setBillRequests(billRequests);
         return billRepository.save(bill);

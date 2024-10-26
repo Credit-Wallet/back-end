@@ -158,9 +158,7 @@ public class AuthService {
 
     public boolean saveFcmToken(String fcmToken, String jwtToken) {
         try {
-            System.out.println(fcmToken);
             jwtToken = jwtToken.substring(7);
-            System.out.println(jwtToken);
             String email = extractEmail(jwtToken);
             Account account = findByEmail(email);
             

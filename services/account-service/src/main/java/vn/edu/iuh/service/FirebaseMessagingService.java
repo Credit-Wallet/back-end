@@ -4,36 +4,50 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import vn.edu.iuh.model.FcmToken;
 import vn.edu.iuh.model.NotificationMessage;
 
+import java.util.List;
+
+@RequiredArgsConstructor
 @Service
 public class FirebaseMessagingService {
-    @Autowired
-    private FirebaseMessaging firebaseMessaging;
+    private static final Logger log = LoggerFactory.getLogger(FirebaseMessagingService.class);
+    private final FirebaseMessaging firebaseMessaging;
+    private final AccountService accountService;
+    private final NotificationHistoryService notificationHistoryService;
     
     //sendNotificationByToken
-    public String sendNotificationByToken(NotificationMessage notificationMessage) {
+    public void sendNotificationByToken(NotificationMessage notificationMessage) {
         Notification notification = Notification.builder()
                 .setTitle(notificationMessage.getTitle())
                 .setBody(notificationMessage.getBody())
                 .setImage(notificationMessage.getImage())
                 .build();
 
-        Message message = Message.builder()
-                .setNotification(notification)
-                .putAllData(notificationMessage.getData())
-                .setToken(notificationMessage.getRecipientToken())
-                .build();
+        List<String> registrationTokens = accountService.getFcmTokens(notificationMessage.getAccountId())
+                .stream()
+                .map(FcmToken::getFcmToken)
+                .toList();
         
-        try {
-            firebaseMessaging.send(message);
+        registrationTokens.forEach(token -> {
+            Message message = Message.builder()
+                    .setNotification(notification)
+                    .putAllData(notificationMessage.getData())
+                    .setToken(token)
+                    .build();
 
-            return "Notification sent successfully";
-        } catch (FirebaseMessagingException e) {
-            System.out.println("Error sending message: " + e.getMessage());
-            return null;
-        }
+            try {
+                firebaseMessaging.send(message);
+
+                notificationHistoryService.saveNotificationHistory(notificationMessage);
+            } catch (FirebaseMessagingException e) {
+                log.error("Error sending message to token: {}", token);
+            }
+        });
     }
 }
