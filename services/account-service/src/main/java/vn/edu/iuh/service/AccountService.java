@@ -26,6 +26,4 @@ public class AccountService {
         account.setSelectedNetworkId(networkId);
         return accountMapper.toAccountResponse(accountRepository.save(account));
     }
-
-
 }

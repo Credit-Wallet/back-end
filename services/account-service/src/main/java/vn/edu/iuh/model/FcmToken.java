@@ -6,31 +6,29 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
 @Getter
 @Builder
-@Entity(name = "accounts")
-public class Account {
+@Entity
+@Table(name = "fcm_tokens")
+public class FcmToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String username;
-    @Column(unique = true)
-    private String email;
-    private String password;
-    private Long selectedNetworkId;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FcmToken> fcmTokens = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
+    @Column(unique = true, nullable = false)
+    private String fcmToken;
 
     @CreationTimestamp
-    @Column
     private Timestamp createdAt;
+
     @UpdateTimestamp
     private Timestamp updatedAt;
 }

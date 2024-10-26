@@ -13,6 +13,7 @@ spring:
               - http://192.168.1.7:9500
               - https://localhost
               - https://localhost:9500
+              - http://localhost:9500
               - https://192.168.1.129:9500
             allowedMethods:
               - "*"
