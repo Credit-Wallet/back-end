@@ -3,6 +3,13 @@ spring:
     import: optional:configserver:http://config-server:8000
   application:
     name: account-service
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+
 #server:
 #  port: 8001
 #spring:

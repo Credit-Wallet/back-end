@@ -1,3 +1,4 @@
 .env
 .idea
 .docker/data/db
+services/account-service/src/main/resources/firebase.properties

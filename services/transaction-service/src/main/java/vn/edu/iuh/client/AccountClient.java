@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import vn.edu.iuh.response.AccountResponse;
 import vn.edu.iuh.response.ApiResponse;
+import vn.edu.iuh.request.NotificationMessageRequest;
 
 @FeignClient(name = "ACCOUNT-SERVICE")
 public interface AccountClient {
@@ -16,5 +17,8 @@ public interface AccountClient {
 
     @GetMapping("/auth/{id}")
     ApiResponse<AccountResponse> getAccountById(@PathVariable("id") Long id);
-
+    
+    //notification
+    @PostMapping("/auth/send-notification")
+    ApiResponse<?> sendNotification(NotificationMessageRequest notificationMessageResponse);
 }

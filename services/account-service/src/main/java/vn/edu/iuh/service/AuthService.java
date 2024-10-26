@@ -17,7 +17,9 @@ import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
 import vn.edu.iuh.mapper.AccountMapper;
 import vn.edu.iuh.model.Account;
+import vn.edu.iuh.model.FcmToken;
 import vn.edu.iuh.repository.AccountRepository;
+import vn.edu.iuh.repository.FcmTokenRepository;
 import vn.edu.iuh.request.LoginRequest;
 import vn.edu.iuh.request.RegisterRequest;
 import vn.edu.iuh.response.AccountResponse;
@@ -36,6 +38,7 @@ public class AuthService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final PasswordEncoder passwordEncoder;
+    private final FcmTokenRepository fcmTokenRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -145,5 +148,36 @@ public class AuthService {
     public AccountResponse getAccountById(Long id) {
         return accountMapper.toAccountResponse(accountRepository.findById(id).orElseThrow(() ->
                 new AppException(ErrorCode.ACCOUNT_NOT_FOUND)));
+    }
+
+    //logout
+    public String logout(String token) {
+        SecurityContextHolder.clearContext();
+        return "Logout success";
+    }
+
+    public boolean saveFcmToken(String fcmToken, String jwtToken) {
+        try {
+            jwtToken = jwtToken.substring(7);
+            String email = extractEmail(jwtToken);
+            Account account = findByEmail(email);
+            
+            fcmTokenRepository.findByFcmToken(fcmToken)
+                    .ifPresentOrElse(
+                            existingToken -> {},
+                            () -> {
+                                FcmToken newToken = FcmToken.builder()
+                                        .account(account)
+                                        .fcmToken(fcmToken)
+                                        .build();
+                                fcmTokenRepository.save(newToken);
+                            }
+                    );
+            
+            return true;
+        } catch (Exception e) {
+            log.error("Cannot save fcm token", e);
+            throw new AppException(ErrorCode.SERVER_ERROR);
+        }
     }
 }

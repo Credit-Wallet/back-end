@@ -3,6 +3,8 @@ package vn.edu.iuh.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.mapper.AccountMapper;
+import vn.edu.iuh.model.Account;
+import vn.edu.iuh.model.FcmToken;
 import vn.edu.iuh.repository.AccountRepository;
 import vn.edu.iuh.response.AccountResponse;
 
@@ -26,6 +28,11 @@ public class AccountService {
         account.setSelectedNetworkId(networkId);
         return accountMapper.toAccountResponse(accountRepository.save(account));
     }
-
-
+    
+    //get fcm_tokens by accountId
+    public List<FcmToken> getFcmTokens(Long accountIds) {
+        return accountRepository.findById(accountIds)
+                .map(Account::getFcmTokens)
+                .orElse(List.of());
+    }
 }

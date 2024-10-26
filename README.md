@@ -1,4 +1,20 @@
-1. cp .example.env .env
-2. docker-compose up -d
-3. Creat a new database in MySQL: account, network, wallet, transaction
-4. Rerun the container to apply the new database
+# Setup environment variables
+1. Create a `.env` file in the root directory of the project.
+```shell
+cp .env.example .env
+```
+2. Setup the environment variables of firebase in the `firebase.properties` file.
+```shell
+cp services/account-service/src/main/resources/firebase.template.properties services/account-service/src/main/resources/firebase.properties
+```
+Write the firebase configuration in the `firebase.properties` file.
+# Run the project
+1. Run the following command to start the project.
+```shell
+docker-compose up -d
+```
+2. Create database `account`, `network`, `transaction`, `wallet` in the MySQL database.
+3. Restart the project.
+```shell
+docker-compose restart
+```
