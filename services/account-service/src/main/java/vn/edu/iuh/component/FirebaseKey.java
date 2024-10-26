@@ -16,8 +16,8 @@ public class FirebaseKey {
     private String privateKeyId;
     @Value("${firebase.private-key}")
     private String privateKey;
-    @Value("${firebase.client-ent}")
-    private String clientEnt;
+    @Value("${firebase.client-email}")
+    private String clientEmail;
     @Value("${firebase.client-id}")
     private String clientId;
     @Value("${firebase.auth-uri}")
@@ -38,7 +38,7 @@ public class FirebaseKey {
                 "  \"project_id\": \"" + projectId + "\",\n" +
                 "  \"private_key_id\": \"" + privateKeyId + "\",\n" +
                 "  \"private_key\": \"" + privateKey + "\",\n" +
-                "  \"client_email\": \"" + clientEnt + "\",\n" +
+                "  \"client_email\": \"" + clientEmail + "\",\n" +
                 "  \"client_id\": \"" + clientId + "\",\n" +
                 "  \"auth_uri\": \"" + authUri + "\",\n" +
                 "  \"token_uri\": \"" + tokenUri + "\",\n" +
