@@ -10,7 +10,7 @@ spring:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
-              - https://friendspay.surge.sh
+              - "*"
             allowedMethods:
               - "*"
             allowedHeaders:
