@@ -97,7 +97,8 @@ public class BillService {
         billRequests1.forEach(billRequest -> {
             Map<String, String> data = Map.of(
                     "billRequestId", billRequest.getId().toString(),
-                    "networkId", result.getNetworkId().toString()
+                    "networkId", result.getNetworkId().toString(),
+                    "billId", result.getId().toString()
                     );
 
             log.info("data: " + data);

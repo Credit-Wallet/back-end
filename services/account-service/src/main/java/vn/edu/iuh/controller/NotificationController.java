@@ -37,10 +37,10 @@ public class NotificationController {
     }
     
     //read all
-//    @PutMapping("/read-all")
-//    public ApiResponse<?> readAllNotification(
-//            @RequestHeader("Authorization") String token
-//    ) {
-//        return notificationHistoryService.readAllNotification(token);
-//    }
+    @PutMapping("/read-all")
+    public ApiResponse<?> readAllNotification(
+            @RequestHeader("Authorization") String token
+    ) {
+        return notificationHistoryService.readAllNotification(token);
+    }
 }

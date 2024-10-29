@@ -19,6 +19,7 @@ import vn.edu.iuh.response.ApiResponse;
 import vn.edu.iuh.response.NotificationHistoryResponse;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -94,15 +95,12 @@ public class NotificationHistoryService {
     }
     
     //readAllNotification
-//    public ApiResponse<?> readAllNotification(String token) {
-//        var account = authService.getProfile(token);
-//        var notifications = notificationHistoryRepository.findByAccountIdAndReadIs(account.getId(), false);
-//        log.info("notifications: " + notifications);
-//        notifications.forEach(notification -> {
-//            notification.setRead(true);
-//            notificationHistoryRepository.save(notification);
-//        });
-//        
-//        return ApiResponse.builder().code(200).message("Read all notification successfully").build();
-//    }
+    public ApiResponse<?> readAllNotification(String token) {
+        var account = authService.getProfile(token);
+        var notifications = notificationHistoryRepository.findByAccountIdAndRead(account.getId(), false);
+        notifications.forEach(notification -> notification.setRead(true));
+        notificationHistoryRepository.saveAll(notifications);
+
+        return ApiResponse.builder().code(200).message("Read all notification successfully").build();
+    }
 }

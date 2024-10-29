@@ -18,4 +18,5 @@ public class BillRequestResponse {
     private String description;
     private String createdAt;
     private AccountResponse account;
+    private BillResponse bill;
 }
