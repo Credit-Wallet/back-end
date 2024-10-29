@@ -24,7 +24,6 @@ public class NotificationHistory {
     private boolean isRead;
     @Enumerated(EnumType.STRING)
     private TypeNotification type;
-    
     @CreationTimestamp
     private String createdAt;
     @UpdateTimestamp

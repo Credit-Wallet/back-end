@@ -4,21 +4,24 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.iuh.model.Bill;
-import vn.edu.iuh.model.Status;
+import vn.edu.iuh.model.TypeNotification;
+
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BillRequestResponse {
+public class NotificationHistoryResponse {
     private Long id;
+    private String title;
+    private String body;
+    private String image;
     private Long accountId;
-    private double amount;
-    private Bill bill;
-    private Status status;
-    private String description;
-    private String createdAt;
+    private String data;
+    private boolean isRead;
+    private TypeNotification type;
     private AccountResponse account;
+    private BillRequestResponse billRequest;
     private NetworkResponse network;
 }

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.client.AccountClient;
+import vn.edu.iuh.client.NetworkClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
 import vn.edu.iuh.mapper.BillRequestMapper;
@@ -23,6 +24,7 @@ public class BillRequestService {
     private final BillRequestRepository billRequestRepository;
     private final AccountClient accountClient;
     private final BillRequestMapper billRequestMapper;
+    private final NetworkClient networkClient;
 
     public Page<BillRequestResponse> getBillRequests(String token, Timestamp fromDate, Timestamp toDate, Status status, int page, int limit) {
         var account = accountClient.getProfile(token).getResult();
@@ -38,7 +40,7 @@ public class BillRequestService {
         );
         return billRequests.map(billRequest -> {
             var accountResponse = accountClient.getAccountById(billRequest.getAccountId()).getResult();
-            return billRequestMapper.toBillRequestResponse(billRequest, accountResponse);
+            return billRequestMapper.toBillRequestResponse(billRequest, accountResponse, null);
         });
     }
 
@@ -49,7 +51,8 @@ public class BillRequestService {
     public BillRequestResponse getBillRequestById(Long id) {
         var billRequest = findById(id);
         var accountResponse = accountClient.getAccountById(billRequest.getAccountId()).getResult();
-        return billRequestMapper.toBillRequestResponse(billRequest, accountResponse);
+        var networkResponse = networkClient.getNetworkById(billRequest.getBill().getNetworkId()).getResult();
+        return billRequestMapper.toBillRequestResponse(billRequest, accountResponse, networkResponse);
     }
 
 }

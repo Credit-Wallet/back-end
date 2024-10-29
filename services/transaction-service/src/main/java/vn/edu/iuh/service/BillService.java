@@ -1,6 +1,8 @@
 package vn.edu.iuh.service;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class BillService {
+    private static final Logger log = LoggerFactory.getLogger(BillService.class);
     private final TransactionRepository transactionRepository;
     private final BillMapper billMapper;
     private final AccountClient accountClient;
@@ -59,7 +62,7 @@ public class BillService {
             var accountResponse = accountClient.getAccountById(bill.getAccountId()).getResult();
             var billRequestResponses = bill.getBillRequests().stream().map(billRequest -> {
                 var accountRequest = accountClient.getAccountById(billRequest.getAccountId()).getResult();
-                return billRequestMapper.toBillRequestResponse(billRequest, accountRequest);
+                return billRequestMapper.toBillRequestResponse(billRequest, accountRequest, null);
             });
             var transactionResponses = bill.getTransactions().stream().map(transaction -> {
                 var fromAccount = accountClient.getAccountById(transaction.getFromAccountId()).getResult();
@@ -85,15 +88,28 @@ public class BillService {
                             .bill(bill)
                             .build()
             );
+        }
+        bill.setBillRequests(billRequests);
+        Bill result = billRepository.save(bill);
+        
+        Set<BillRequest> billRequests1 = result.getBillRequests();
+        
+        billRequests1.forEach(billRequest -> {
+            Map<String, String> data = Map.of(
+                    "billRequestId", billRequest.getId().toString(),
+                    "networkId", result.getNetworkId().toString()
+                    );
+
+            log.info("data: " + data);
 
             NotificationMessageRequest notificationMessageResponse = NotificationMessageRequest
                     .builder()
                     .accountId(billRequest.getAccountId())
-                    .title("You have a new bill request")
-                    .body("You have a new bill request from " + account.getUsername())
+                    .title("Bạn có một yêu cầu thanh toán mới từ " + account.getUsername())
+                    .body("Số tiền cần thanh toán: " + billRequest.getAmount())
                     .recipientToken(null)
                     .type(vn.edu.iuh.model.TypeNotification.BILL_REQUEST)
-                    .data(null)
+                    .data(data)
                     .build();
 
             // If you are the creator then do not send
@@ -101,9 +117,9 @@ public class BillService {
             {
                 accountClient.sendNotification(notificationMessageResponse);
             }
-        }
-        bill.setBillRequests(billRequests);
-        return billRepository.save(bill);
+        });
+        
+        return result;
     }
 
     public Bill confirmBill(Long id){
@@ -168,7 +184,7 @@ public class BillService {
         var account = accountClient.getAccountById(bill.getAccountId()).getResult();
         var billRequestResponses = bill.getBillRequests().stream().map(billRequest -> {
             var accountRequest = accountClient.getAccountById(billRequest.getAccountId()).getResult();
-            return billRequestMapper.toBillRequestResponse(billRequest, accountRequest);
+            return billRequestMapper.toBillRequestResponse(billRequest, accountRequest, null);
         });
         var transactionResponses = bill.getTransactions().stream().map(transaction -> {
             var fromAccount = accountClient.getAccountById(transaction.getFromAccountId()).getResult();
