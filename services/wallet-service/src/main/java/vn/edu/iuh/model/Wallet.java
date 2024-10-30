@@ -20,6 +20,10 @@ public class Wallet {
     private Long accountId;
     private double balance;
     private Long networkId;
+    private String walletPath;
+    private String walletAddress;
+    private String privateKey;
+    private String password;
     @CreationTimestamp
     @Column
     private Timestamp createdAt;
