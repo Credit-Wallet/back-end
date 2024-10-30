@@ -1,4 +1,4 @@
-package vn.edu.iuh.configs;
+package vn.edu.iuh.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

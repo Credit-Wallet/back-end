@@ -1,4 +1,4 @@
-package vn.edu.iuh.configs;
+package vn.edu.iuh.config;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;

@@ -63,7 +63,7 @@ public class NetworkService {
             network.setWalletPath(walletFileName);
             var balance = network.getMaxBalance() * network.getMaxMember();
             network.setBalance(balance);
-            transferTokens(network.getWalletAddress(), balance, "250e0b1c3d18b24f3cd8bfde392a4d1a6776a9f42f13fcb46134e4a135781dfc");
+            transferTokens(network.getWalletAddress(), balance, "e9e788e8e9e927ef98c386f289932998ea8fadb7399f11a823e4b9c0a730e6cb");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -77,7 +77,7 @@ public class NetworkService {
         Credentials credentials = Credentials.create(privateKey);
         RawTransactionManager transactionManager = new RawTransactionManager(web3j, credentials);
 
-        String tokenContractAddress = "0xA88657562e04031E4b6Bb3fc80e2BC4E4c2436A9";
+        String tokenContractAddress = "0x786d28240Cb5Dac04C66C15453EE4F3b603e49e5";
         ContractGasProvider gasProvider = new DefaultGasProvider();
 
         BigInteger amountInWei = BigDecimal.valueOf(tokenAmount).multiply(BigDecimal.TEN.pow(18)).toBigInteger();

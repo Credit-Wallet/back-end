@@ -25,7 +25,7 @@ public class WalletController {
 
     @PostMapping("/test")
     public ApiResponse<?> test(@RequestParam("fromId") Long fromId, @RequestParam("toId") Long toId,
-                               @RequestParam("networkId") Long networkId, @RequestParam("amount") double amount) throws IOException {
+                               @RequestParam("networkId") Long networkId, @RequestParam("amount") double amount) throws Exception {
         return ApiResponse.builder()
                 .result(walletService.transfer(fromId, toId,networkId, amount))
                 .build();
