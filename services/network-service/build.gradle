@@ -47,6 +47,7 @@ dependencies {
 //	ZXing
 	implementation 'com.google.zxing:core:3.5.3'
 	implementation 'com.google.zxing:javase:3.5.3'
+	implementation 'org.web3j:core:4.8.7'
 }
 
 dependencyManagement {

@@ -3,6 +3,18 @@ package vn.edu.iuh.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.WalletUtils;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.http.HttpService;
+import org.web3j.tx.RawTransactionManager;
+import org.web3j.tx.gas.ContractGasProvider;
+import org.web3j.tx.gas.DefaultGasProvider;
 import vn.edu.iuh.client.WalletClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
@@ -11,6 +23,11 @@ import vn.edu.iuh.model.Network;
 import vn.edu.iuh.repository.NetworkRepository;
 import vn.edu.iuh.request.CreateNetworkRequest;
 
+import java.io.File;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -28,9 +45,62 @@ public class NetworkService {
 
     public Network createNetwork(CreateNetworkRequest request, String token) {
         Network network = networkMapper.toNetwork(request);
+        network.setPassword(request.getName());
+        try {
+            String password = request.getName();
+            File walletDirectory = new File("/wallet");
+            if (!walletDirectory.exists()) {
+                walletDirectory.mkdirs();
+            }
+            String walletFileName = WalletUtils.generateNewWalletFile(password, walletDirectory, true);
+            System.out.println("Wallet created: " + walletFileName);
+
+            Credentials credentials = WalletUtils.loadCredentials(password, new File(walletDirectory, walletFileName));
+            System.out.println("Wallet Address: " + credentials.getAddress());
+            System.out.println("Private Key: " + credentials.getEcKeyPair().getPrivateKey().toString(16));
+            network.setWalletAddress(credentials.getAddress());
+            network.setPrivateKey(credentials.getEcKeyPair().getPrivateKey().toString(16));
+            network.setWalletPath(walletFileName);
+            var balance = network.getMaxBalance() * network.getMaxMember();
+            network.setBalance(balance);
+            transferTokens(network.getWalletAddress(), balance, "250e0b1c3d18b24f3cd8bfde392a4d1a6776a9f42f13fcb46134e4a135781dfc");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         var savedNetwork = networkRepository.save(network);
         walletClient.createWallet(savedNetwork.getId(), token);
         return savedNetwork;
+    }
+
+    public void transferTokens(String recipientAddress, double tokenAmount, String privateKey) throws Exception {
+        Web3j web3j = Web3j.build(new HttpService("https://eth-sepolia.g.alchemy.com/v2/gIyKgeCxAHZLnSBjmSwTTxbK_ur45AfJ"));
+        Credentials credentials = Credentials.create(privateKey);
+        RawTransactionManager transactionManager = new RawTransactionManager(web3j, credentials);
+
+        String tokenContractAddress = "0xA88657562e04031E4b6Bb3fc80e2BC4E4c2436A9";
+        ContractGasProvider gasProvider = new DefaultGasProvider();
+
+        BigInteger amountInWei = BigDecimal.valueOf(tokenAmount).multiply(BigDecimal.TEN.pow(18)).toBigInteger();
+
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(recipientAddress), new Uint256(amountInWei)),
+                Collections.emptyList()
+        );
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        EthSendTransaction transactionResponse = transactionManager.sendTransaction(
+                gasProvider.getGasPrice(),
+                gasProvider.getGasLimit(),
+                tokenContractAddress,
+                encodedFunction,
+                BigInteger.ZERO
+        );
+
+        if (transactionResponse.hasError()) {
+            throw new RuntimeException("Transaction Error: " + transactionResponse.getError().getMessage());
+        }
     }
 
     public Network joinNetwork(Long networkId, String token) {

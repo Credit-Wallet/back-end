@@ -20,6 +20,11 @@ public class Network {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    private String walletPath;
+    private String walletAddress;
+    private String privateKey;
+    private String password;
+    private double balance;
     private double minBalance;
     private double maxBalance;
     private Long maxMember;
