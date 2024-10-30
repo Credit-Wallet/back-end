@@ -75,7 +75,11 @@ public class BillController {
 
     @PutMapping("/{id}/cancel-bill-request")
     public ApiResponse<Bill> cancelTransactionDetail(@PathVariable("id") Long id,
-                                                     @RequestHeader("Authorization") String token,@RequestBody() CancelBillRequest request) {
+                                                     @RequestHeader("Authorization") String token,@RequestBody(required = false) CancelBillRequest request) {
+        if (request == null) {
+            request = new CancelBillRequest();
+        }
+        
         var result = billService.cancelBillRequest(id, token,request);
         return ApiResponse.<Bill>builder()
                 .result(result)

@@ -1,6 +1,8 @@
 package vn.edu.iuh.service;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,16 +25,18 @@ import vn.edu.iuh.repository.TransactionRepository;
 import vn.edu.iuh.request.CancelBillRequest;
 import vn.edu.iuh.request.CreateBillRequest;
 import vn.edu.iuh.response.BillResponse;
-import vn.edu.iuh.response.TransactionResponse;
+import vn.edu.iuh.request.NotificationMessageRequest;
 
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class BillService {
+    private static final Logger log = LoggerFactory.getLogger(BillService.class);
     private final TransactionRepository transactionRepository;
     private final BillMapper billMapper;
     private final AccountClient accountClient;
@@ -58,7 +62,7 @@ public class BillService {
             var accountResponse = accountClient.getAccountById(bill.getAccountId()).getResult();
             var billRequestResponses = bill.getBillRequests().stream().map(billRequest -> {
                 var accountRequest = accountClient.getAccountById(billRequest.getAccountId()).getResult();
-                return billRequestMapper.toBillRequestResponse(billRequest, accountRequest);
+                return billRequestMapper.toBillRequestResponse(billRequest, accountRequest, null);
             });
             var transactionResponses = bill.getTransactions().stream().map(transaction -> {
                 var fromAccount = accountClient.getAccountById(transaction.getFromAccountId()).getResult();
@@ -86,7 +90,37 @@ public class BillService {
             );
         }
         bill.setBillRequests(billRequests);
-        return billRepository.save(bill);
+        Bill result = billRepository.save(bill);
+        
+        Set<BillRequest> billRequests1 = result.getBillRequests();
+        
+        billRequests1.forEach(billRequest -> {
+            Map<String, String> data = Map.of(
+                    "billRequestId", billRequest.getId().toString(),
+                    "networkId", result.getNetworkId().toString(),
+                    "billId", result.getId().toString()
+                    );
+
+            log.info("data: " + data);
+
+            NotificationMessageRequest notificationMessageResponse = NotificationMessageRequest
+                    .builder()
+                    .accountId(billRequest.getAccountId())
+                    .title("Bạn có một yêu cầu thanh toán mới từ " + account.getUsername())
+                    .body("Số tiền cần thanh toán: " + billRequest.getAmount())
+                    .recipientToken(null)
+                    .type(vn.edu.iuh.model.TypeNotification.BILL_REQUEST)
+                    .data(data)
+                    .build();
+
+            // If you are the creator then do not send
+            if (!bill.getAccountId().equals(billRequest.getAccountId()))
+            {
+                accountClient.sendNotification(notificationMessageResponse);
+            }
+        });
+        
+        return result;
     }
 
     public Bill confirmBill(Long id){
@@ -151,7 +185,7 @@ public class BillService {
         var account = accountClient.getAccountById(bill.getAccountId()).getResult();
         var billRequestResponses = bill.getBillRequests().stream().map(billRequest -> {
             var accountRequest = accountClient.getAccountById(billRequest.getAccountId()).getResult();
-            return billRequestMapper.toBillRequestResponse(billRequest, accountRequest);
+            return billRequestMapper.toBillRequestResponse(billRequest, accountRequest, null);
         });
         var transactionResponses = bill.getTransactions().stream().map(transaction -> {
             var fromAccount = accountClient.getAccountById(transaction.getFromAccountId()).getResult();

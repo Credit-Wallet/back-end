@@ -13,7 +13,7 @@ public enum ErrorCode {
     INVALID_REQUEST(400, "Invalid request", HttpStatus.BAD_REQUEST),
     ACCOUNT_NOT_FOUND(404, "Account not found", HttpStatus.NOT_FOUND),
     PASSWORD_NOT_MATCH(400, "Password not match", HttpStatus.BAD_REQUEST),
-    ACCOUNT_EXISTED(400, "Account existed", HttpStatus.BAD_REQUEST);
+    ACCOUNT_EXISTED(409, "Account existed", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

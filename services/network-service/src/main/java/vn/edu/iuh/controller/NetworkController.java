@@ -76,7 +76,6 @@ public class NetworkController {
 
             return new ResponseEntity<>(base64Image, HttpStatus.OK);
         } catch (WriterException | IOException e) {
-            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
