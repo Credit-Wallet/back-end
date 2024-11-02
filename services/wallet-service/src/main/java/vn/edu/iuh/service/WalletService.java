@@ -1,6 +1,7 @@
 package vn.edu.iuh.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -38,6 +39,8 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final AccountClient accountClient;
     private final RestTemplate restTemplate;
+    @Value("${blockchain.transfer.url}")
+    private String transferUrl;
 
     public WalletResponse getWallet(String token) throws IOException {
         var account = accountClient.getProfile(token).getResult();
@@ -84,7 +87,7 @@ public class WalletService {
 
         String fromAddress = from.getWalletAddress();
         String toAddress = to.getWalletAddress();
-        String url = "http://localhost:3002/transfer";
+        String url = transferUrl;
         String body = "{\n" +
                 "    \"privateKey\": \"" + from.getPrivateKey() + "\",\n" +
                 "    \"sender\": \"" + fromAddress + "\",\n" +

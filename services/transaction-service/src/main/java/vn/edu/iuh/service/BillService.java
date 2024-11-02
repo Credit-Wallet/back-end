@@ -228,6 +228,7 @@ public class BillService {
                 actualAmount += billRequest.getAmount();
                 walletClient.updateBalance(bill.getAccountId(), bill.getNetworkId(), billRequest.getAmount());
                 walletClient.updateBalance(billRequest.getAccountId(), bill.getNetworkId(), -billRequest.getAmount());
+                walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(),bill.getNetworkId() ,billRequest.getAmount());
             }
         }
         return actualAmount;

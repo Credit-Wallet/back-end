@@ -2,6 +2,7 @@ package vn.edu.iuh.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.Address;
@@ -37,6 +38,12 @@ public class NetworkService {
     private final NetworkRepository networkRepository;
     private final NetworkMapper networkMapper;
     private final WalletClient walletClient;
+    @Value("${blockchain.infura-url}")
+    private String infuraUrl;
+    @Value("${blockchain.contract-address}")
+    private String contractAddress;
+    @Value("${blockchain.root-wallet.private-key}")
+    private String rootPrivateKey;
 
     public List<Network> getNetworks(String token) {
         List<Long> networkIds = walletClient.getNetworkIdsByAccount(token).getResult();
@@ -63,7 +70,7 @@ public class NetworkService {
             network.setWalletPath(walletFileName);
             var balance = network.getMaxBalance() * network.getMaxMember();
             network.setBalance(balance);
-            transferTokens(network.getWalletAddress(), balance, "e9e788e8e9e927ef98c386f289932998ea8fadb7399f11a823e4b9c0a730e6cb");
+            transferTokens(network.getWalletAddress(), balance, rootPrivateKey);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -73,11 +80,10 @@ public class NetworkService {
     }
 
     public void transferTokens(String recipientAddress, double tokenAmount, String privateKey) throws Exception {
-        Web3j web3j = Web3j.build(new HttpService("https://eth-sepolia.g.alchemy.com/v2/gIyKgeCxAHZLnSBjmSwTTxbK_ur45AfJ"));
+        Web3j web3j = Web3j.build(new HttpService(infuraUrl));
         Credentials credentials = Credentials.create(privateKey);
         RawTransactionManager transactionManager = new RawTransactionManager(web3j, credentials);
 
-        String tokenContractAddress = "0x786d28240Cb5Dac04C66C15453EE4F3b603e49e5";
         ContractGasProvider gasProvider = new DefaultGasProvider();
 
         BigInteger amountInWei = BigDecimal.valueOf(tokenAmount).multiply(BigDecimal.TEN.pow(18)).toBigInteger();
@@ -93,7 +99,7 @@ public class NetworkService {
         EthSendTransaction transactionResponse = transactionManager.sendTransaction(
                 gasProvider.getGasPrice(),
                 gasProvider.getGasLimit(),
-                tokenContractAddress,
+                contractAddress,
                 encodedFunction,
                 BigInteger.ZERO
         );

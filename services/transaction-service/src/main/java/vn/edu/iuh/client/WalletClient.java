@@ -1,9 +1,7 @@
 package vn.edu.iuh.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.response.ApiResponse;
 
 @FeignClient(name = "WALLET-SERVICE")
@@ -17,4 +15,8 @@ public interface WalletClient {
     ApiResponse<?> updateBalance(@PathVariable("accountId") Long accountId,
                                  @PathVariable("networkId") Long networkId,
                                     @PathVariable("amount") double amount);
+
+    @PostMapping("/wallets/transfer")
+    ApiResponse<?> transfer(@RequestParam("fromId") Long fromId, @RequestParam("toId") Long toId,
+                            @RequestParam("networkId") Long networkId, @RequestParam("amount") double amount);
 }

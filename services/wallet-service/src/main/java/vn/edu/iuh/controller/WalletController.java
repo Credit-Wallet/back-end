@@ -23,8 +23,8 @@ import java.util.List;
 public class WalletController {
     private final WalletService walletService;
 
-    @PostMapping("/test")
-    public ApiResponse<?> test(@RequestParam("fromId") Long fromId, @RequestParam("toId") Long toId,
+    @PostMapping("/transfer")
+    public ApiResponse<?> transfer(@RequestParam("fromId") Long fromId, @RequestParam("toId") Long toId,
                                @RequestParam("networkId") Long networkId, @RequestParam("amount") double amount) throws Exception {
         return ApiResponse.builder()
                 .result(walletService.transfer(fromId, toId,networkId, amount))

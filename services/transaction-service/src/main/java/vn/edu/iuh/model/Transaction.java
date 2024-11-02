@@ -30,4 +30,5 @@ public class Transaction {
     @Column(updatable = false)
     private Timestamp createdAt;
     private boolean type;
+    private String hash;
 }
