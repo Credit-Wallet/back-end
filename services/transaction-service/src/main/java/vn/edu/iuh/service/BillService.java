@@ -226,9 +226,35 @@ public class BillService {
                 bill.getTransactions().add(transactionOut);
                 bill.getTransactions().add(transactionIn);
                 actualAmount += billRequest.getAmount();
-                walletClient.updateBalance(bill.getAccountId(), bill.getNetworkId(), billRequest.getAmount());
-                walletClient.updateBalance(billRequest.getAccountId(), bill.getNetworkId(), -billRequest.getAmount());
-                walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(),bill.getNetworkId() ,billRequest.getAmount());
+                walletClient.receiveBalance(bill.getAccountId(), bill.getNetworkId(), billRequest.getAmount());
+                walletClient.sendBalance(billRequest.getAccountId(), bill.getNetworkId(), billRequest.getAmount());
+
+                var fromWallet = walletClient.getWallet(billRequest.getAccountId(), bill.getNetworkId()).getResult();
+                var toWallet = walletClient.getWallet(bill.getAccountId(), bill.getNetworkId()).getResult();
+
+                double balanceOfFromWallet = fromWallet.getBalance();
+                double debtOfFromWallet = balanceOfFromWallet > billRequest.getAmount() ? 0 : billRequest.getAmount() - balanceOfFromWallet;
+                double debtOfToWallet = toWallet.getDebt();
+                if(debtOfFromWallet == 0 && debtOfToWallet == 0){
+                    walletClient.transfer(billRequest.getAccountId(),bill.getAccountId(),bill.getNetworkId(),billRequest.getAmount());
+                }else if(debtOfFromWallet > 0 && debtOfToWallet == 0){
+                    double debt = billRequest.getAmount() - balanceOfFromWallet;
+                    walletClient.transfer(null,bill.getAccountId(),bill.getNetworkId(),debt);
+                    walletClient.transfer(billRequest.getAccountId(),bill.getAccountId(),bill.getNetworkId(),balanceOfFromWallet);
+                }else if(debtOfFromWallet == 0 && debtOfToWallet > 0) {
+                    double amount = billRequest.getAmount() - debtOfToWallet;
+                    if(amount > 0) {
+                        walletClient.transfer(billRequest.getAccountId(), null, bill.getNetworkId(), amount);
+                        walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), billRequest.getAmount() - amount);
+                    }else{
+                        walletClient.transfer(billRequest.getAccountId(), null, bill.getNetworkId(), billRequest.getAmount());
+                    }
+                }else if(debtOfFromWallet > 0 && debtOfToWallet > 0){
+                    double amount = billRequest.getAmount() - debtOfToWallet;
+                    if(amount > 0) {
+                        walletClient.transfer(null, bill.getAccountId(), bill.getNetworkId(), amount);
+                    }
+                }
             }
         }
         return actualAmount;

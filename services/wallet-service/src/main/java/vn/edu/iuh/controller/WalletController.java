@@ -53,12 +53,21 @@ public class WalletController {
                 .build();
     }
 
-    @PutMapping("/{accountId}/{networkId}/update-balance/{amount}")
-    public ApiResponse<Wallet> updateBalance(@PathVariable("accountId") Long accountId,
+    @PutMapping("/{accountId}/{networkId}/send-balance/{amount}")
+    public ApiResponse<Wallet> sendBalance(@PathVariable("accountId") Long accountId,
                                              @PathVariable("networkId") Long networkId,
                                              @PathVariable("amount") double amount) {
         return ApiResponse.<Wallet>builder()
-                .result(walletService.updateBalance(accountId, networkId, amount))
+                .result(walletService.sendBalance(accountId, networkId, amount))
+                .build();
+    }
+
+    @PutMapping("/{accountId}/{networkId}/receive-balance/{amount}")
+    public ApiResponse<Wallet> receiveBalance(@PathVariable("accountId") Long accountId,
+                                             @PathVariable("networkId") Long networkId,
+                                             @PathVariable("amount") double amount) {
+        return ApiResponse.<Wallet>builder()
+                .result(walletService.receiveBalance(accountId, networkId, amount))
                 .build();
     }
 

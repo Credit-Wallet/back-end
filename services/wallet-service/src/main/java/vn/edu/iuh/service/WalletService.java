@@ -41,14 +41,22 @@ public class WalletService {
     private final RestTemplate restTemplate;
     @Value("${blockchain.transfer.url}")
     private String transferUrl;
+    @Value("${blockchain.infura-url}")
+    private String infuraUrl;
+    @Value("${blockchain.contract-address}")
+    private String contractAddress;
+    @Value("${blockchain.root-wallet.address}")
+    private String rootWalletAddress;
+    @Value("${blockchain.root-wallet.private-key}")
+    private String rootWalletPrivateKey;
 
     public WalletResponse getWallet(String token) throws IOException {
         var account = accountClient.getProfile(token).getResult();
         var wallet = walletRepository.findByAccountIdAndNetworkId(account.getId(), account.getSelectedNetworkId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
-        Web3j web3j = Web3j.build(new HttpService("https://eth-sepolia.g.alchemy.com/v2/gIyKgeCxAHZLnSBjmSwTTxbK_ur45AfJ"));
+        Web3j web3j = Web3j.build(new HttpService(infuraUrl));
         String walletAddress = wallet.getWalletAddress();
-        String tokenContractAddress = "0x786d28240Cb5Dac04C66C15453EE4F3b603e49e5";
+        String tokenContractAddress = contractAddress;
 
         Function function = new Function(
                 "balanceOf",
@@ -80,16 +88,26 @@ public class WalletService {
     }
 
     public String  transfer(Long fromId, Long toId, Long networkId, double amount) throws Exception {
-        Wallet from = walletRepository.findByAccountIdAndNetworkId(fromId, networkId)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
-        Wallet to = walletRepository.findByAccountIdAndNetworkId(toId, networkId)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+        System.out.println("Transfering " + amount + " tokens from " + fromId + " to " + toId);
+        String fromAddress = rootWalletAddress;
+        String toAddress = rootWalletAddress;
+        String privateKey = rootWalletPrivateKey;
+        if(fromId != null){
+            Wallet from = walletRepository.findByAccountIdAndNetworkId(fromId, networkId)
+                    .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
 
-        String fromAddress = from.getWalletAddress();
-        String toAddress = to.getWalletAddress();
+            fromAddress = from.getWalletAddress();
+            privateKey = from.getPrivateKey();
+        }
+        if(toId != null){
+            Wallet to = walletRepository.findByAccountIdAndNetworkId(toId, networkId)
+                    .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            toAddress = to.getWalletAddress();
+        }
+
         String url = transferUrl;
         String body = "{\n" +
-                "    \"privateKey\": \"" + from.getPrivateKey() + "\",\n" +
+                "    \"privateKey\": \"" + privateKey + "\",\n" +
                 "    \"sender\": \"" + fromAddress + "\",\n" +
                 "    \"receiver\": \"" + toAddress + "\",\n" +
                 "    \"amount\": " + amount + "\n" +
@@ -128,6 +146,7 @@ public class WalletService {
                     .walletAddress(credentials.getAddress())
                     .privateKey(credentials.getEcKeyPair().getPrivateKey().toString(16))
                     .walletPath(walletFileName)
+                    .debt(0)
                     .balance(0)
                     .build();
             if (walletRepository.existsByAccountIdAndNetworkId(wallet.getAccountId(), wallet.getNetworkId())) {
@@ -145,9 +164,37 @@ public class WalletService {
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
     }
 
-    public Wallet updateBalance(Long accountId, Long networkId, double amount) {
+    public Wallet sendBalance(Long accountId, Long networkId, double amount) {
         var wallet = getWallet(accountId, networkId);
-        wallet.setBalance(wallet.getBalance() + amount);
+        if(wallet.getBalance() < amount){
+            if(wallet.getBalance() > 0){
+                double temp = amount - wallet.getBalance();
+                wallet.setDebt(wallet.getDebt() + temp);
+                wallet.setBalance(-temp);
+            }else{
+                wallet.setDebt(wallet.getDebt() + amount);
+                wallet.setBalance(wallet.getBalance() - amount);
+            }
+        }else{
+            wallet.setBalance(wallet.getBalance() - amount);
+        }
+        return walletRepository.save(wallet);
+    }
+
+    public Wallet receiveBalance(Long accountId, Long networkId, double amount) {
+        var wallet = getWallet(accountId, networkId);
+        if(wallet.getDebt() > 0){
+            if(wallet.getDebt() > amount){
+                wallet.setDebt(wallet.getDebt() - amount);
+                wallet.setBalance(wallet.getBalance() + amount);
+            }else{
+                double temp = amount - wallet.getDebt();
+                wallet.setDebt(0);
+                wallet.setBalance(wallet.getBalance() + temp);
+            }
+        }else{
+            wallet.setBalance(wallet.getBalance() + amount);
+        }
         return walletRepository.save(wallet);
     }
 
