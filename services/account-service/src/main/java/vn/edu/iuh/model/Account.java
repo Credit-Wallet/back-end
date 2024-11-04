@@ -27,6 +27,9 @@ public class Account {
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<FcmToken> fcmTokens = new ArrayList<>();
+    
+    @Column
+    private String urlAvatar;
 
     @CreationTimestamp
     @Column

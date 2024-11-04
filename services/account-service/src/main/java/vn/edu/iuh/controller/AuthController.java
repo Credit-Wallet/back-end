@@ -3,9 +3,14 @@ package vn.edu.iuh.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.model.NotificationMessage;
 import vn.edu.iuh.producer.NotificationProducer;
@@ -16,18 +21,25 @@ import vn.edu.iuh.response.ApiResponse;
 import vn.edu.iuh.response.LoginResponse;
 import vn.edu.iuh.response.AccountResponse;
 import vn.edu.iuh.service.AuthService;
+import vn.edu.iuh.service.FileStorageService;
 import vn.edu.iuh.service.FirebaseMessagingService;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Date;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final AuthService authService;
     private final FirebaseMessagingService firebaseMessagingService;
     private final NotificationProducer notificationProducer;
+    private final FileStorageService fileStorageService;
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> authenticate(@RequestBody @Valid LoginRequest request) throws AppException {
@@ -105,5 +117,64 @@ public class AuthController {
                 .code(201)
                 .message("Notification sent to queue")
                 .build();
+    }
+    
+    //upload avatar
+    @PostMapping("/upload-avatar")
+    public ApiResponse<?> uploadAvatar(
+            @RequestParam(name = "file", required = false) MultipartFile file,
+            @RequestHeader("Authorization") String token
+    ) {
+        if (file.getSize() > 1024 * 1024) {
+            return ApiResponse.builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message("File size must be less than 1MB")
+                    .build();
+        }
+
+        String fileName = fileStorageService.storeFile(file);
+        boolean result = authService.saveAvatar(fileName, token);
+
+        if (result) {
+            return ApiResponse.builder()
+                    .code(200)
+                    .message("Avatar uploaded")
+                    .result(fileName)
+                    .build();
+        } else {
+            return ApiResponse.builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("Cannot upload avatar")
+                    .build();
+        }
+    }
+    
+    //update username
+    @PostMapping("/update-username")
+    public ApiResponse<?> updateUsername(
+        @RequestBody(required = false) String username,
+        @RequestHeader("Authorization") String token
+    ) {
+        log.info("Username: {}", username);
+        boolean result = authService.updateUsername(username, token);
+        
+        if (result) {
+            return ApiResponse.builder()
+                    .code(204)
+                    .message("Username updated")
+                    .result(username)
+                    .build();
+        } else {
+            return ApiResponse.builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("Cannot update username")
+                    .build();
+        }
+    }
+    
+    //update email
+    @PostMapping("/update-email")
+    public ApiResponse<?> updateEmail(@RequestBody String email, @RequestHeader("Authorization") String token) {
+        return authService.updateEmail(email, token);
     }
 }

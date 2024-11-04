@@ -29,8 +29,12 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthenticationFilter implements GlobalFilter, Ordered {
     private final AccountService accountService;
-    private final Set<String> unauthenticatedPaths = Set.of("/eureka/**","/api/v1/auth/login",
-            "/api/v1/auth/register");
+    private final Set<String> unauthenticatedPaths = Set.of(
+            "/eureka/**",
+            "/api/v1/auth/login",
+            "/api/v1/auth/register",
+            "/api/v1/uploads/**"
+    );
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     private final ObjectMapper objectMapper;
 

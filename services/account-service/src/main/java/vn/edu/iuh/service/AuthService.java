@@ -23,6 +23,7 @@ import vn.edu.iuh.repository.FcmTokenRepository;
 import vn.edu.iuh.request.LoginRequest;
 import vn.edu.iuh.request.RegisterRequest;
 import vn.edu.iuh.response.AccountResponse;
+import vn.edu.iuh.response.ApiResponse;
 import vn.edu.iuh.response.LoginResponse;
 
 import java.text.ParseException;
@@ -179,5 +180,54 @@ public class AuthService {
             log.error("Cannot save fcm token", e);
             throw new AppException(ErrorCode.SERVER_ERROR);
         }
+    }
+    
+    //save url avatar
+    public boolean saveAvatar(String urlAvatar, String jwtToken) {
+        try {
+            jwtToken = jwtToken.substring(7);
+            String email = extractEmail(jwtToken);
+            Account account = findByEmail(email);
+            account.setUrlAvatar(urlAvatar);
+            accountRepository.save(account);
+            return true;
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.SERVER_ERROR);
+        }
+    }
+    
+    public boolean updateUsername(String username, String jwtToken) {
+        try {
+            jwtToken = jwtToken.substring(7);
+            String email = extractEmail(jwtToken);
+            Account account = findByEmail(email);
+            account.setUsername(username);
+            accountRepository.save(account);
+            return true;
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.SERVER_ERROR);
+        }
+    }
+    
+    //updateEmail
+    public ApiResponse<?> updateEmail(String email, String jwtToken) {
+        jwtToken = jwtToken.substring(7);
+        String emailToken = extractEmail(jwtToken);
+        
+        if (accountRepository.existsByEmail(email)) {
+            return ApiResponse.builder()
+                    .code(400)
+                    .message("Email existed")
+                    .build();
+        }
+        
+        Account account = findByEmail(emailToken);
+        account.setEmail(email);
+        accountRepository.save(account);
+        return ApiResponse.builder()
+                .code(204)
+                .message("Email updated")
+                .result(email)
+                .build();
     }
 }

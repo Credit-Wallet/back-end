@@ -15,4 +15,5 @@ public class AccountResponse {
     private String username;
     private String email;
     private Long selectedNetworkId;
+    private String urlAvatar;
 }

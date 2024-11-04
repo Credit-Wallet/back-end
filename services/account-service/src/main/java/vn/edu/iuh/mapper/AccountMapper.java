@@ -21,6 +21,7 @@ public class AccountMapper {
                 .username(account.getUsername())
                 .email(account.getEmail())
                 .selectedNetworkId(account.getSelectedNetworkId())
+                .urlAvatar(account.getUrlAvatar())
                 .build();
     }
 }
