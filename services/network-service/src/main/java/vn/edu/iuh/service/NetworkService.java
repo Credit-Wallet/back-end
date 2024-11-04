@@ -60,8 +60,6 @@ public class NetworkService {
                 walletDirectory.mkdirs();
             }
             String walletFileName = WalletUtils.generateNewWalletFile(password, walletDirectory, true);
-            System.out.println("Wallet created: " + walletFileName);
-
             Credentials credentials = WalletUtils.loadCredentials(password, new File(walletDirectory, walletFileName));
             System.out.println("Wallet Address: " + credentials.getAddress());
             System.out.println("Private Key: " + credentials.getEcKeyPair().getPrivateKey().toString(16));

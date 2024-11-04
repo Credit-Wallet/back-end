@@ -20,6 +20,7 @@ import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
 import vn.edu.iuh.client.AccountClient;
+import vn.edu.iuh.client.NetworkClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
 import vn.edu.iuh.model.Wallet;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 public class WalletService {
     private final WalletRepository walletRepository;
     private final AccountClient accountClient;
+    private final NetworkClient networkClient;
     private final RestTemplate restTemplate;
     @Value("${blockchain.transfer.url}")
     private String transferUrl;
@@ -88,18 +90,20 @@ public class WalletService {
     }
 
     public String  transfer(Long fromId, Long toId, Long networkId, double amount) throws Exception {
+        var network = networkClient.getNetworkById(networkId).getResult();
+        System.out.println("Network: " + network.getPrivateKey());
         System.out.println("Transfering " + amount + " tokens from " + fromId + " to " + toId);
-        String fromAddress = rootWalletAddress;
+        String fromAddress = network.getWalletAddress();
         String toAddress = rootWalletAddress;
-        String privateKey = rootWalletPrivateKey;
-        if(fromId != null){
+        String privateKey = network.getPrivateKey();
+        if(fromId != 0L){
             Wallet from = walletRepository.findByAccountIdAndNetworkId(fromId, networkId)
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
 
             fromAddress = from.getWalletAddress();
             privateKey = from.getPrivateKey();
         }
-        if(toId != null){
+        if(toId != 0L){
             Wallet to = walletRepository.findByAccountIdAndNetworkId(toId, networkId)
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
             toAddress = to.getWalletAddress();
