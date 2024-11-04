@@ -170,6 +170,9 @@ public class WalletService {
 
     public Wallet sendBalance(Long accountId, Long networkId, double amount) {
         var wallet = getWallet(accountId, networkId);
+        System.out.println("Amount sender: " + amount);
+        System.out.println("Balance of sender: " + wallet.getBalance());
+        System.out.println("Debt of sender: " + wallet.getDebt());
         if(wallet.getBalance() < amount){
             if(wallet.getBalance() > 0){
                 double temp = amount - wallet.getBalance();
@@ -187,14 +190,16 @@ public class WalletService {
 
     public Wallet receiveBalance(Long accountId, Long networkId, double amount) {
         var wallet = getWallet(accountId, networkId);
+        System.out.println("Amount receiver: " + amount);
+        System.out.println("Balance of receiver: " + wallet.getBalance());
+        System.out.println("Debt of receiver: " + wallet.getDebt());
         if(wallet.getDebt() > 0){
             if(wallet.getDebt() > amount){
                 wallet.setDebt(wallet.getDebt() - amount);
                 wallet.setBalance(wallet.getBalance() + amount);
             }else{
-                double temp = amount - wallet.getDebt();
                 wallet.setDebt(0);
-                wallet.setBalance(wallet.getBalance() + temp);
+                wallet.setBalance(wallet.getBalance() + amount);
             }
         }else{
             wallet.setBalance(wallet.getBalance() + amount);

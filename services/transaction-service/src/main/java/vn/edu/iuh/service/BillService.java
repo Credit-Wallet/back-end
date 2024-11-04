@@ -236,13 +236,13 @@ public class BillService {
                 double debtOfToWallet = toWallet.getDebt();
                 double amount = billRequest.getAmount();
 
-                System.out.println("Amount A" + balanceOfFromWallet);
-                System.out.println("Amount B" + balanceOfToWallet);
-                System.out.println("Debt A" + debtOfFromWallet);
-                System.out.println("Debt B" + debtOfToWallet);
+                System.out.println("Amount of sender" + balanceOfFromWallet);
+                System.out.println("Amount of receive" + balanceOfToWallet);
+                System.out.println("Debt of sender" + debtOfFromWallet);
+                System.out.println("Debt of receive" + debtOfToWallet);
 
-                String sender = "A";
-                String receiver = "B";
+                String sender = "Sender";
+                String receiver = "Receiver";
                 String payment = "Payment";
 
                 // Trường hợp 1: Cả hai ví không có nợ và ví gửi có đủ tiền -> Ok
@@ -263,27 +263,26 @@ public class BillService {
                 else if (debtOfFromWallet == 0 && debtOfToWallet > 0 && balanceOfFromWallet >= amount && debtOfToWallet >= amount) {
                     System.out.println(sender + " -> " + payment + " " + amount);
                 }
-                // Trường hợp 5: Ví gửi không có nợ gửi đủ tiền và ví nhận có nợ ít hơn số tiền
+                // Trường hợp 5: Ví gửi không có nợ gửi đủ tiền và ví nhận có nợ ít hơn số tiền -> Ok
                 else if (debtOfFromWallet == 0 && debtOfToWallet > 0 && balanceOfFromWallet >= amount && debtOfToWallet < amount) {
                     double temp = amount - debtOfToWallet;
                     System.out.println(sender + " -> " + receiver + " " + temp);
                 }
-                // Trường hợp 6: Ví gửi không có nợ gửi không đủ tiền và ví nhận có nợ ít hơn số tiền người gửi thực sự gửi
-                else if (debtOfFromWallet == 0 && debtOfToWallet > 0 && balanceOfFromWallet < amount && debtOfToWallet < amount - debtOfToWallet) {
-                    double temp = amount - balanceOfFromWallet;
-                    double temp1 = amount - debtOfToWallet;
-                    double tem = temp - temp1;
-                    System.out.println(payment + " -> " + receiver + " " + tem);
+                // Trường hợp 6: Ví gửi không có nợ gửi không đủ tiền và ví nhận có nợ ít hơn số tiền người gửi thực sự gửi -> Ok
+                else if (debtOfFromWallet == 0 && debtOfToWallet > 0 && balanceOfFromWallet < amount && debtOfToWallet < amount - debtOfFromWallet) {
+                    double temp = amount - debtOfToWallet;
+                    System.out.println(sender + " -> " + payment + " " + balanceOfFromWallet);
+                    System.out.println(payment + " -> " + receiver + " " + temp);
                 }
-                // Trường hợp 7: Ví gửi không có nợ gửi không đủ tiền và ví nhận có nợ nhiều hơn số tiền người gửi thực sự gửi
-                else if (debtOfFromWallet == 0 && debtOfToWallet > 0 && balanceOfFromWallet < amount && debtOfToWallet >= amount - debtOfToWallet) {;
+                // Trường hợp 7: Ví gửi không có nợ gửi không đủ tiền và ví nhận có nợ nhiều hơn số tiền người gửi thực sự gửi -> Ok
+                else if (debtOfFromWallet == 0 && debtOfToWallet > 0 && balanceOfFromWallet < amount && debtOfToWallet >= amount - debtOfFromWallet) {;
                     System.out.println(sender + " -> " + payment + " " + balanceOfFromWallet);
                 }
-                // Trường hợp 8: Ví gửi có nợ và ví nhận có nợ nhiều hơn số tiền
+                // Trường hợp 8: Ví gửi có nợ và ví nhận có nợ nhiều hơn số tiền -> Ok
                 else if (debtOfFromWallet > 0 && debtOfToWallet > 0 && debtOfToWallet > amount) {
-                    System.out.println(payment + " -> " + receiver + " " + 0);
+                    System.out.println("Debt for payment");
                 }
-                // Trường hợp 9: Ví gửi có nợ và ví nhận có nợ ít hơn số tiền
+                // Trường hợp 9: Ví gửi có nợ và ví nhận có nợ ít hơn số tiền - Ok
                 else if (debtOfFromWallet > 0 && debtOfToWallet > 0 && debtOfToWallet <= amount) {
                     double temp = amount - debtOfToWallet;
                     System.out.println(payment + " -> " + receiver + " " + temp);
