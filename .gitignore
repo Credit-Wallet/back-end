@@ -2,3 +2,4 @@
 .idea
 .docker/data/db
 services/account-service/src/main/resources/firebase.properties
+services/account-service/src/main/resources/uploads

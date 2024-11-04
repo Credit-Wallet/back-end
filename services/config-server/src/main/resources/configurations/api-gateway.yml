@@ -26,6 +26,12 @@ spring:
             - Path=${app.api-prefix}/notifications/**
           filters:
             - StripPrefix=2
+        - id: account-service
+          uri: lb://ACCOUNT-SERVICE  # Địa chỉ và cổng của account-service
+          predicates:
+            - Path=${app.api-prefix}/uploads/**
+          filters:
+            - StripPrefix=2
         - id: wallet-service
           uri: lb://WALLET-SERVICE
           predicates:
