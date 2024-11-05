@@ -9,6 +9,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.GET;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.model.Network;
 import vn.edu.iuh.request.CreateNetworkRequest;
 import vn.edu.iuh.response.ApiResponse;
+import vn.edu.iuh.response.NetworkResponse;
 import vn.edu.iuh.service.NetworkService;
 
 import java.io.ByteArrayOutputStream;
@@ -81,9 +83,9 @@ public class NetworkController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<Network> findById(@PathVariable("id") Long id) {
-        return ApiResponse.<Network>builder()
-                .result(networkService.findById(id))
+    public ApiResponse<NetworkResponse> findById(@PathVariable("id") Long id) throws IOException {
+        return ApiResponse.<NetworkResponse>builder()
+                .result(networkService.getById(id))
                 .build();
     }
 }

@@ -5,17 +5,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
+import org.web3j.utils.Convert;
 import vn.edu.iuh.client.WalletClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
@@ -23,8 +29,10 @@ import vn.edu.iuh.mapper.NetworkMapper;
 import vn.edu.iuh.model.Network;
 import vn.edu.iuh.repository.NetworkRepository;
 import vn.edu.iuh.request.CreateNetworkRequest;
+import vn.edu.iuh.response.NetworkResponse;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -115,5 +123,42 @@ public class NetworkService {
 
     public Network findById(Long networkId) {
         return networkRepository.findById(networkId).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+    }
+
+    public NetworkResponse getById(Long id) throws IOException {
+        var network = findById(id);
+        Web3j web3j = Web3j.build(new HttpService(infuraUrl));
+        String walletAddress = network.getWalletAddress();
+        String tokenContractAddress = contractAddress;
+
+        Function function = new Function(
+                "balanceOf",
+                Collections.singletonList(new Address(walletAddress)),
+                Collections.singletonList(new TypeReference<Uint256>() {
+                })
+        );
+
+        String encodedFunction = FunctionEncoder.encode(function);
+        EthCall response = web3j.ethCall(
+                org.web3j.protocol.core.methods.request.Transaction.createEthCallTransaction(walletAddress, tokenContractAddress, encodedFunction),
+                DefaultBlockParameterName.LATEST
+        ).send();
+        List<Type> results = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
+        BigInteger balance = (BigInteger) results.get(0).getValue();
+        var balanceOf = Convert.fromWei(balance.toString(), Convert.Unit.ETHER);
+
+        return NetworkResponse.builder()
+                .name(network.getName())
+                .minBalance(network.getMinBalance())
+                .maxBalance(network.getMaxBalance())
+                .maxMember(network.getMaxMember())
+                .description(network.getDescription())
+                .walletAddress(network.getWalletAddress())
+                .privateKey(network.getPrivateKey())
+                .balance(network.getBalance())
+                .currency(network.getCurrency())
+                .currentBalance(balanceOf.doubleValue())
+                .id(network.getId())
+                .build();
     }
 }

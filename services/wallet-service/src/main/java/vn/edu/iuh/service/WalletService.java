@@ -94,7 +94,7 @@ public class WalletService {
         System.out.println("Network: " + network.getPrivateKey());
         System.out.println("Transfering " + amount + " tokens from " + fromId + " to " + toId);
         String fromAddress = network.getWalletAddress();
-        String toAddress = rootWalletAddress;
+        String toAddress = network.getWalletAddress();
         String privateKey = network.getPrivateKey();
         if(fromId != 0L){
             Wallet from = walletRepository.findByAccountIdAndNetworkId(fromId, networkId)
