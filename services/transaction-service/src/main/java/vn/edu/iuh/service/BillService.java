@@ -24,13 +24,14 @@ import vn.edu.iuh.repository.BillRequestRepository;
 import vn.edu.iuh.repository.TransactionRepository;
 import vn.edu.iuh.request.CancelBillRequest;
 import vn.edu.iuh.request.CreateBillRequest;
-import vn.edu.iuh.response.BillResponse;
 import vn.edu.iuh.request.NotificationMessageRequest;
+import vn.edu.iuh.response.BillResponse;
 
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -220,10 +221,10 @@ public class BillService {
                         .amount(billRequest.getAmount())
                         .bill(bill)
                         .build();
-                transactionRepository.save(transactionOut);
-                transactionRepository.save(transactionIn);
                 bill.getTransactions().add(transactionOut);
                 bill.getTransactions().add(transactionIn);
+                var savedOut = transactionRepository.save(transactionOut);
+                var savedIn = transactionRepository.save(transactionIn);
                 actualAmount += billRequest.getAmount();
 
 
@@ -245,77 +246,53 @@ public class BillService {
                 String receiver = "Receiver";
                 String payment = "Payment";
 
-                // Trường hợp 1: Cả hai ví không có nợ và ví gửi có đủ tiền -> Ok
-                if (debtOfFromWallet == 0 && debtOfToWallet == 0 && balanceOfFromWallet >= amount) {
-                    System.out.println("HASH" + sender + " -> " + receiver + " " + amount);
-                    walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount);
-                }
-                // Trường hợp 2: Cả hai ví không có nợ nhưng ví gửi không đủ tiền -> Ok
-                else if (debtOfFromWallet == 0 && debtOfToWallet == 0 && balanceOfFromWallet < amount) {
-                    System.out.println(payment + " -> " + receiver + " " + (amount-balanceOfFromWallet));
-                    walletClient.transfer(0L, bill.getAccountId(), bill.getNetworkId(), amount-balanceOfFromWallet);
-                    System.out.println(sender + " -> " + receiver + " " + amount);
-                    walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount);
-                }
-                // Trường hợp 3: Ví gửi có nợ và ví nhận không có nợ -> Ok
-                else if (debtOfFromWallet > 0 && debtOfToWallet == 0) {
-                    System.out.println(payment + " -> " + sender + " " + amount);
-                    walletClient.transfer(0L, billRequest.getAccountId(), bill.getNetworkId(), amount);
-                    System.out.println(sender + " -> " + receiver + " " + amount);
-                    walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount);
-                }
-                // Trường hợp 4: Ví gửi không có nợ gửi đủ tiền và ví nhận có nợ nhiều hơn số tiền  -> Ok
-                else if (debtOfFromWallet == 0 && debtOfToWallet > 0 && balanceOfFromWallet >= amount && debtOfToWallet >= amount) {
-                    System.out.println(sender + " -> " + receiver + " " + amount);
-                    walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount);
-                    System.out.println(receiver + " -> " + payment + " " + amount);
-                    walletClient.transfer(bill.getAccountId(), 0L, bill.getNetworkId(), amount);
-                }
-                // Trường hợp 5: Ví gửi không có nợ gửi đủ tiền và ví nhận có nợ ít hơn số tiền -> Ok
-                else if (debtOfFromWallet == 0 && debtOfToWallet > 0 && balanceOfFromWallet >= amount && debtOfToWallet < amount) {
-                    System.out.println(sender + " -> " + receiver + " " + amount);
-                    System.out.println(receiver + " -> " + payment + " " + debtOfToWallet);
-                    walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount);
-                    walletClient.transfer(bill.getAccountId(), 0L, bill.getNetworkId(), debtOfToWallet);
-                }
-                // Trường hợp 6: Ví gửi không có nợ gửi không đủ tiền và ví nhận có nợ ít hơn số tiền -> Ok
-                else if (debtOfFromWallet == 0 && debtOfToWallet > 0 && balanceOfFromWallet < amount && debtOfToWallet <= amount) {
-                    System.out.println(payment + " -> " + sender + " " + (amount-balanceOfFromWallet));
-                    walletClient.transfer(0L, billRequest.getAccountId(), bill.getNetworkId(), amount-balanceOfFromWallet);
-                    System.out.println(sender + " -> " + receiver + " " + amount);
-                    walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount);
-                    System.out.println(receiver + " -> " + payment + " " + debtOfToWallet);
-                    walletClient.transfer(bill.getAccountId(), 0L, bill.getNetworkId(), debtOfToWallet);
+                CompletableFuture.supplyAsync(() -> {
+                            if (balanceOfFromWallet < amount || balanceOfFromWallet <= 0) {
+                                if (balanceOfFromWallet > 0) {
+                                    walletClient.transfer(0L, billRequest.getAccountId(), bill.getNetworkId(), (amount - balanceOfFromWallet));
+                                    System.out.println(payment + " -> " + sender + " " + (amount - balanceOfFromWallet));
+                                } else {
+                                    walletClient.transfer(0L, billRequest.getAccountId(), bill.getNetworkId(), amount);
+                                    System.out.println(payment + " -> " + sender + " " + amount);
+                                }
+                            }
+                            return null;
+                        })
+                        .thenCompose(result -> {
+                            System.out.println(sender + " -> " + receiver + " " + amount);
+                            return CompletableFuture.supplyAsync(() -> walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount));
+                        })
+                        .thenApply(transferResult -> {
+                            String hash = transferResult.getResult();
+                            System.out.println("Hash: " + hash);
+                            savedOut.setHash(hash);
+                            savedIn.setHash(hash);
+                            transactionRepository.save(savedOut);
+                            transactionRepository.save(savedIn);
+                            return hash;
+                        })
+                        .thenCompose(hash -> {
+                            if (debtOfToWallet > amount) {
+                                walletClient.transfer(bill.getAccountId(), 0L, bill.getNetworkId(), amount);
+                                System.out.println(receiver + " -> " + payment + " " + amount);
+                            } else if (debtOfToWallet > 0) {
+                                walletClient.transfer(bill.getAccountId(), 0L, bill.getNetworkId(), debtOfToWallet);
+                                System.out.println(receiver + " -> " + payment + " " + debtOfToWallet);
+                            }
+                            return CompletableFuture.completedFuture(hash);
+                        });
 
-                }
-                // Trường hợp 7: Ví gửi không có nợ gửi không đủ tiền và ví nhận có nợ nhiều hơn số tiền  -> Ok
-                else if (debtOfFromWallet == 0 && debtOfToWallet > 0 && balanceOfFromWallet < amount && debtOfToWallet > amount) {;
-                    System.out.println(payment + " -> " + sender + " " + (amount-balanceOfFromWallet));
-                    walletClient.transfer(0L, billRequest.getAccountId(), bill.getNetworkId(), amount-balanceOfFromWallet);
-                    System.out.println(sender + " -> " + receiver + " " + amount);
-                    walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount);
-                    System.out.println(receiver + " -> " + payment + " " + amount);
-                    walletClient.transfer(bill.getAccountId(), 0L, bill.getNetworkId(), amount);
-                }
-                // Trường hợp 8: Ví gửi có nợ và ví nhận có nợ nhiều hơn số tiền -> Ok
-                else if (debtOfFromWallet > 0 && debtOfToWallet > 0 && debtOfToWallet > amount) {
-                    System.out.println(payment + " -> " + sender + " " + amount);
-                    walletClient.transfer(0L, billRequest.getAccountId(), bill.getNetworkId(), amount);
-                    System.out.println(sender + " -> " + receiver + " " + amount);
-                    walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount);
-                    System.out.println(receiver + " -> " + payment + " " + amount);
-                    walletClient.transfer(bill.getAccountId(), 0L, bill.getNetworkId(), amount);
-                }
-                // Trường hợp 9: Ví gửi có nợ và ví nhận có nợ ít hơn số tiền - Ok
-                else if (debtOfFromWallet > 0 && debtOfToWallet > 0 && debtOfToWallet <= amount) {
-                    System.out.println(payment + " -> " + sender + " " + amount);
-                    walletClient.transfer(0L, billRequest.getAccountId(), bill.getNetworkId(), amount);
-                    System.out.println(sender + " -> " + receiver + " " + amount);
-                    walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount);
-                    System.out.println(receiver + " -> " + payment + " " + debtOfToWallet);
-                    walletClient.transfer(bill.getAccountId(), 0L, bill.getNetworkId(), debtOfToWallet);
-                }
-                
+
+//                // Trường hợp 1: Cả hai ví không có nợ và ví gửi có đủ tiền -> Ok
+//                // Trường hợp 2: Cả hai ví không có nợ nhưng ví gửi không đủ tiền -> Ok
+//                // Trường hợp 3: Ví gửi có nợ và ví nhận không có nợ -> Ok
+//                // Trường hợp 4: Ví gửi không có nợ gửi đủ tiền và ví nhận có nợ nhiều hơn số tiền  -> Ok
+//                // Trường hợp 5: Ví gửi không có nợ gửi đủ tiền và ví nhận có nợ ít hơn số tiền -> Ok
+//                // Trường hợp 6: Ví gửi không có nợ gửi không đủ tiền và ví nhận có nợ ít hơn số tiền -> Ok
+//                // Trường hợp 7: Ví gửi không có nợ gửi không đủ tiền và ví nhận có nợ nhiều hơn số tiền  -> Ok
+//                // Trường hợp 8: Ví gửi có nợ và ví nhận có nợ nhiều hơn số tiền -> Ok
+//                // Trường hợp 9: Ví gửi có nợ và ví nhận có nợ ít hơn số tiền ->
+
                 walletClient.receiveBalance(bill.getAccountId(), bill.getNetworkId(), billRequest.getAmount());
                 walletClient.sendBalance(billRequest.getAccountId(), bill.getNetworkId(), billRequest.getAmount());
             }

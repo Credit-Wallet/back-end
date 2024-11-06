@@ -89,7 +89,7 @@ public class WalletService {
                 .build();
     }
 
-    public String  transfer(Long fromId, Long toId, Long networkId, double amount) throws Exception {
+    public String transfer(Long fromId, Long toId, Long networkId, double amount) throws Exception {
         var network = networkClient.getNetworkById(networkId).getResult();
         System.out.println("Network: " + network.getPrivateKey());
         System.out.println("Transfering " + amount + " tokens from " + fromId + " to " + toId);

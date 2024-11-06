@@ -23,6 +23,6 @@ public interface WalletClient {
                                  @PathVariable("amount") double amount);
 
     @PostMapping("/wallets/transfer")
-    ApiResponse<?> transfer(@RequestParam("fromId") Long fromId, @RequestParam("toId") Long toId,
+    ApiResponse<String> transfer(@RequestParam("fromId") Long fromId, @RequestParam("toId") Long toId,
                             @RequestParam("networkId") Long networkId, @RequestParam("amount") double amount);
 }
