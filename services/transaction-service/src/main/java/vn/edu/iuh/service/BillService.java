@@ -24,13 +24,14 @@ import vn.edu.iuh.repository.BillRequestRepository;
 import vn.edu.iuh.repository.TransactionRepository;
 import vn.edu.iuh.request.CancelBillRequest;
 import vn.edu.iuh.request.CreateBillRequest;
-import vn.edu.iuh.response.BillResponse;
 import vn.edu.iuh.request.NotificationMessageRequest;
+import vn.edu.iuh.response.BillResponse;
 
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -46,7 +47,7 @@ public class BillService {
     private final BillRequestMapper billRequestMapper;
     private final TransactionMapper transactionMapper;
 
-    public Page<BillResponse> getBills(String token, Timestamp fromDate, Timestamp toDate,Status status, int page, int limit) {
+    public Page<BillResponse> getBills(String token, Timestamp fromDate, Timestamp toDate, Status status, int page, int limit) {
         var account = accountClient.getProfile(token).getResult();
 
         Pageable pageable = PageRequest.of(page, limit, Sort.by("createdAt").descending());
@@ -73,7 +74,7 @@ public class BillService {
         });
     }
 
-    public Bill createBill(CreateBillRequest request, String token){
+    public Bill createBill(CreateBillRequest request, String token) {
         var account = accountClient.getProfile(token).getResult();
         Bill bill = billMapper.toBill(request);
         bill.setAccountId(account.getId());
@@ -91,15 +92,15 @@ public class BillService {
         }
         bill.setBillRequests(billRequests);
         Bill result = billRepository.save(bill);
-        
+
         Set<BillRequest> billRequests1 = result.getBillRequests();
-        
+
         billRequests1.forEach(billRequest -> {
             Map<String, String> data = Map.of(
                     "billRequestId", billRequest.getId().toString(),
                     "networkId", result.getNetworkId().toString(),
                     "billId", result.getId().toString()
-                    );
+            );
 
             log.info("data: " + data);
 
@@ -114,16 +115,15 @@ public class BillService {
                     .build();
 
             // If you are the creator then do not send
-            if (!bill.getAccountId().equals(billRequest.getAccountId()))
-            {
+            if (!bill.getAccountId().equals(billRequest.getAccountId())) {
                 accountClient.sendNotification(notificationMessageResponse);
             }
         });
-        
+
         return result;
     }
 
-    public Bill confirmBill(Long id){
+    public Bill confirmBill(Long id) {
         Bill bill = findById(id);
         double actualAmount = processBill(bill);
         bill.setActualAmount(actualAmount);
@@ -131,13 +131,13 @@ public class BillService {
         return billRepository.save(bill);
     }
 
-    public Bill cancelBill(Long id,String token){
+    public Bill cancelBill(Long id, String token) {
         var account = accountClient.getProfile(token).getResult();
         Bill bill = findById(id);
-        if(!bill.getAccountId().equals(account.getId())){
+        if (!bill.getAccountId().equals(account.getId())) {
             throw new AppException(ErrorCode.NOT_FOUND);
         }
-        if(!bill.getStatus().equals(Status.PENDING)){
+        if (!bill.getStatus().equals(Status.PENDING)) {
             throw new AppException(ErrorCode.BILL_NOT_PENDING);
         }
         bill.setStatus(Status.CANCELLED);
@@ -148,7 +148,7 @@ public class BillService {
         return billRepository.save(bill);
     }
 
-    public Bill confirmBillRequest(Long id, String token){
+    public Bill confirmBillRequest(Long id, String token) {
         Bill bill = findById(id);
         var account = accountClient.getProfile(token).getResult();
         BillRequest billRequest = billRequestRepository
@@ -160,14 +160,14 @@ public class BillService {
         return billRepository.save(bill);
     }
 
-    public Bill cancelBillRequest(Long id, String token, CancelBillRequest request){
+    public Bill cancelBillRequest(Long id, String token, CancelBillRequest request) {
         Bill bill = findById(id);
         var account = accountClient.getProfile(token).getResult();
         BillRequest billRequest = billRequestRepository
                 .findByBillAndAccountId(bill, account.getId()).orElseThrow(
                         () -> new AppException(ErrorCode.NOT_FOUND)
                 );
-        if(!billRequest.getStatus().equals(Status.PENDING)){
+        if (!billRequest.getStatus().equals(Status.PENDING)) {
             throw new AppException(ErrorCode.BILL_REQUEST_NOT_PENDING);
         }
         billRequest.setDescription(request.getDescription());
@@ -176,11 +176,11 @@ public class BillService {
         return bill;
     }
 
-    public Bill findById(Long id){
+    public Bill findById(Long id) {
         return billRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
     }
 
-    public BillResponse getBillById(Long id){
+    public BillResponse getBillById(Long id) {
         Bill bill = findById(id);
         var account = accountClient.getAccountById(bill.getAccountId()).getResult();
         var billRequestResponses = bill.getBillRequests().stream().map(billRequest -> {
@@ -192,13 +192,13 @@ public class BillService {
             var toAccount = accountClient.getAccountById(transaction.getToAccountId()).getResult();
             return transactionMapper.toResponse(transaction, fromAccount, toAccount);
         });
-        return billMapper.toBillResponse(bill, account,transactionResponses.collect(Collectors.toSet()), billRequestResponses.collect(Collectors.toSet()));
+        return billMapper.toBillResponse(bill, account, transactionResponses.collect(Collectors.toSet()), billRequestResponses.collect(Collectors.toSet()));
     }
 
-    private double processBill(Bill bill){
+    private double processBill(Bill bill) {
         double actualAmount = 0;
         for (BillRequest billRequest : bill.getBillRequests()) {
-            if(billRequest.getStatus().equals(Status.PENDING)){
+            if (billRequest.getStatus().equals(Status.PENDING)) {
                 billRequest.setStatus(Status.CANCELLED);
                 billRequestRepository.save(billRequest);
             }
@@ -221,13 +221,80 @@ public class BillService {
                         .amount(billRequest.getAmount())
                         .bill(bill)
                         .build();
-                transactionRepository.save(transactionOut);
-                transactionRepository.save(transactionIn);
                 bill.getTransactions().add(transactionOut);
                 bill.getTransactions().add(transactionIn);
+                var savedOut = transactionRepository.save(transactionOut);
+                var savedIn = transactionRepository.save(transactionIn);
                 actualAmount += billRequest.getAmount();
-                walletClient.updateBalance(bill.getAccountId(), bill.getNetworkId(), billRequest.getAmount());
-                walletClient.updateBalance(billRequest.getAccountId(), bill.getNetworkId(), -billRequest.getAmount());
+
+
+                var fromWallet = walletClient.getWallet(billRequest.getAccountId(), bill.getNetworkId()).getResult();
+                var toWallet = walletClient.getWallet(bill.getAccountId(), bill.getNetworkId()).getResult();
+
+                double balanceOfFromWallet = fromWallet.getBalance();
+                double debtOfFromWallet = fromWallet.getDebt();
+                double balanceOfToWallet = toWallet.getBalance();
+                double debtOfToWallet = toWallet.getDebt();
+                double amount = billRequest.getAmount();
+
+                System.out.println("Amount of sender" + balanceOfFromWallet);
+                System.out.println("Amount of receive" + balanceOfToWallet);
+                System.out.println("Debt of sender" + debtOfFromWallet);
+                System.out.println("Debt of receive" + debtOfToWallet);
+
+                String sender = "Sender";
+                String receiver = "Receiver";
+                String payment = "Payment";
+
+                CompletableFuture.supplyAsync(() -> {
+                            if (balanceOfFromWallet < amount || balanceOfFromWallet <= 0) {
+                                if (balanceOfFromWallet > 0) {
+                                    walletClient.transfer(0L, billRequest.getAccountId(), bill.getNetworkId(), (amount - balanceOfFromWallet));
+                                    System.out.println(payment + " -> " + sender + " " + (amount - balanceOfFromWallet));
+                                } else {
+                                    walletClient.transfer(0L, billRequest.getAccountId(), bill.getNetworkId(), amount);
+                                    System.out.println(payment + " -> " + sender + " " + amount);
+                                }
+                            }
+                            return null;
+                        })
+                        .thenCompose(result -> {
+                            System.out.println(sender + " -> " + receiver + " " + amount);
+                            return CompletableFuture.supplyAsync(() -> walletClient.transfer(billRequest.getAccountId(), bill.getAccountId(), bill.getNetworkId(), amount));
+                        })
+                        .thenApply(transferResult -> {
+                            String hash = transferResult.getResult();
+                            System.out.println("Hash: " + hash);
+                            savedOut.setHash(hash);
+                            savedIn.setHash(hash);
+                            transactionRepository.save(savedOut);
+                            transactionRepository.save(savedIn);
+                            return hash;
+                        })
+                        .thenCompose(hash -> {
+                            if (debtOfToWallet > amount) {
+                                walletClient.transfer(bill.getAccountId(), 0L, bill.getNetworkId(), amount);
+                                System.out.println(receiver + " -> " + payment + " " + amount);
+                            } else if (debtOfToWallet > 0) {
+                                walletClient.transfer(bill.getAccountId(), 0L, bill.getNetworkId(), debtOfToWallet);
+                                System.out.println(receiver + " -> " + payment + " " + debtOfToWallet);
+                            }
+                            return CompletableFuture.completedFuture(hash);
+                        });
+
+
+//                // Trường hợp 1: Cả hai ví không có nợ và ví gửi có đủ tiền -> Ok
+//                // Trường hợp 2: Cả hai ví không có nợ nhưng ví gửi không đủ tiền -> Ok
+//                // Trường hợp 3: Ví gửi có nợ và ví nhận không có nợ -> Ok
+//                // Trường hợp 4: Ví gửi không có nợ gửi đủ tiền và ví nhận có nợ nhiều hơn số tiền  -> Ok
+//                // Trường hợp 5: Ví gửi không có nợ gửi đủ tiền và ví nhận có nợ ít hơn số tiền -> Ok
+//                // Trường hợp 6: Ví gửi không có nợ gửi không đủ tiền và ví nhận có nợ ít hơn số tiền -> Ok
+//                // Trường hợp 7: Ví gửi không có nợ gửi không đủ tiền và ví nhận có nợ nhiều hơn số tiền  -> Ok
+//                // Trường hợp 8: Ví gửi có nợ và ví nhận có nợ nhiều hơn số tiền -> Ok
+//                // Trường hợp 9: Ví gửi có nợ và ví nhận có nợ ít hơn số tiền ->
+
+                walletClient.receiveBalance(bill.getAccountId(), bill.getNetworkId(), billRequest.getAmount());
+                walletClient.sendBalance(billRequest.getAccountId(), bill.getNetworkId(), billRequest.getAmount());
             }
         }
         return actualAmount;

@@ -17,3 +17,12 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger-ui
+
+blockchain:
+  transfer:
+    url: http://localhost:3002/transfer
+  root-wallet:
+    private-key: "e9e788e8e9e927ef98c386f289932998ea8fadb7399f11a823e4b9c0a730e6cb"
+    address: "0x25Fadc6ac22BdB3529d3025530e2A8aA3Ff2D374"
+  contract-address: "0x786d28240Cb5Dac04C66C15453EE4F3b603e49e5"
+  infura-url: https://sepolia.infura.io/v3/a790901e0a1f4c12ae8611eb31d756ef
