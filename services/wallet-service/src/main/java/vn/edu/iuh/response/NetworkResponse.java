@@ -18,6 +18,4 @@ public class NetworkResponse {
     private String description;
     private String walletAddress;
     private String privateKey;
-    private double balance;
-    private double currentBalance;
 }

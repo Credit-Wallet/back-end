@@ -19,6 +19,7 @@ public class Wallet {
     private Long id;
     private Long accountId;
     private double balance;
+    private double debt;
     private Long networkId;
     private String walletPath;
     private String walletAddress;

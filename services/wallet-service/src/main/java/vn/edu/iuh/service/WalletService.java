@@ -1,6 +1,7 @@
 package vn.edu.iuh.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -19,6 +20,7 @@ import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
 import vn.edu.iuh.client.AccountClient;
+import vn.edu.iuh.client.NetworkClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
 import vn.edu.iuh.model.Wallet;
@@ -37,15 +39,26 @@ import java.util.stream.Collectors;
 public class WalletService {
     private final WalletRepository walletRepository;
     private final AccountClient accountClient;
+    private final NetworkClient networkClient;
     private final RestTemplate restTemplate;
+    @Value("${blockchain.transfer.url}")
+    private String transferUrl;
+    @Value("${blockchain.infura-url}")
+    private String infuraUrl;
+    @Value("${blockchain.contract-address}")
+    private String contractAddress;
+    @Value("${blockchain.root-wallet.address}")
+    private String rootWalletAddress;
+    @Value("${blockchain.root-wallet.private-key}")
+    private String rootWalletPrivateKey;
 
     public WalletResponse getWallet(String token) throws IOException {
         var account = accountClient.getProfile(token).getResult();
         var wallet = walletRepository.findByAccountIdAndNetworkId(account.getId(), account.getSelectedNetworkId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
-        Web3j web3j = Web3j.build(new HttpService("https://eth-sepolia.g.alchemy.com/v2/gIyKgeCxAHZLnSBjmSwTTxbK_ur45AfJ"));
+        Web3j web3j = Web3j.build(new HttpService(infuraUrl));
         String walletAddress = wallet.getWalletAddress();
-        String tokenContractAddress = "0x786d28240Cb5Dac04C66C15453EE4F3b603e49e5";
+        String tokenContractAddress = contractAddress;
 
         Function function = new Function(
                 "balanceOf",
@@ -76,17 +89,29 @@ public class WalletService {
                 .build();
     }
 
-    public String  transfer(Long fromId, Long toId, Long networkId, double amount) throws Exception {
-        Wallet from = walletRepository.findByAccountIdAndNetworkId(fromId, networkId)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
-        Wallet to = walletRepository.findByAccountIdAndNetworkId(toId, networkId)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+    public String transfer(Long fromId, Long toId, Long networkId, double amount) throws Exception {
+        var network = networkClient.getNetworkById(networkId).getResult();
+        System.out.println("Network: " + network.getPrivateKey());
+        System.out.println("Transfering " + amount + " tokens from " + fromId + " to " + toId);
+        String fromAddress = network.getWalletAddress();
+        String toAddress = network.getWalletAddress();
+        String privateKey = network.getPrivateKey();
+        if(fromId != 0L){
+            Wallet from = walletRepository.findByAccountIdAndNetworkId(fromId, networkId)
+                    .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
 
-        String fromAddress = from.getWalletAddress();
-        String toAddress = to.getWalletAddress();
-        String url = "http://localhost:3002/transfer";
+            fromAddress = from.getWalletAddress();
+            privateKey = from.getPrivateKey();
+        }
+        if(toId != 0L){
+            Wallet to = walletRepository.findByAccountIdAndNetworkId(toId, networkId)
+                    .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            toAddress = to.getWalletAddress();
+        }
+
+        String url = transferUrl;
         String body = "{\n" +
-                "    \"privateKey\": \"" + from.getPrivateKey() + "\",\n" +
+                "    \"privateKey\": \"" + privateKey + "\",\n" +
                 "    \"sender\": \"" + fromAddress + "\",\n" +
                 "    \"receiver\": \"" + toAddress + "\",\n" +
                 "    \"amount\": " + amount + "\n" +
@@ -125,6 +150,7 @@ public class WalletService {
                     .walletAddress(credentials.getAddress())
                     .privateKey(credentials.getEcKeyPair().getPrivateKey().toString(16))
                     .walletPath(walletFileName)
+                    .debt(0)
                     .balance(0)
                     .build();
             if (walletRepository.existsByAccountIdAndNetworkId(wallet.getAccountId(), wallet.getNetworkId())) {
@@ -142,9 +168,42 @@ public class WalletService {
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
     }
 
-    public Wallet updateBalance(Long accountId, Long networkId, double amount) {
+    public Wallet sendBalance(Long accountId, Long networkId, double amount) {
         var wallet = getWallet(accountId, networkId);
-        wallet.setBalance(wallet.getBalance() + amount);
+        System.out.println("Amount sender: " + amount);
+        System.out.println("Balance of sender: " + wallet.getBalance());
+        System.out.println("Debt of sender: " + wallet.getDebt());
+        if(wallet.getBalance() < amount){
+            if(wallet.getBalance() > 0){
+                double temp = amount - wallet.getBalance();
+                wallet.setDebt(wallet.getDebt() + temp);
+                wallet.setBalance(-temp);
+            }else{
+                wallet.setDebt(wallet.getDebt() + amount);
+                wallet.setBalance(wallet.getBalance() - amount);
+            }
+        }else{
+            wallet.setBalance(wallet.getBalance() - amount);
+        }
+        return walletRepository.save(wallet);
+    }
+
+    public Wallet receiveBalance(Long accountId, Long networkId, double amount) {
+        var wallet = getWallet(accountId, networkId);
+        System.out.println("Amount receiver: " + amount);
+        System.out.println("Balance of receiver: " + wallet.getBalance());
+        System.out.println("Debt of receiver: " + wallet.getDebt());
+        if(wallet.getDebt() > 0){
+            if(wallet.getDebt() > amount){
+                wallet.setDebt(wallet.getDebt() - amount);
+                wallet.setBalance(wallet.getBalance() + amount);
+            }else{
+                wallet.setDebt(0);
+                wallet.setBalance(wallet.getBalance() + amount);
+            }
+        }else{
+            wallet.setBalance(wallet.getBalance() + amount);
+        }
         return walletRepository.save(wallet);
     }
 

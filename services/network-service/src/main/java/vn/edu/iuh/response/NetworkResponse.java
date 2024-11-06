@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.edu.iuh.model.Currency;
 
 @Data
 @NoArgsConstructor
@@ -19,5 +20,6 @@ public class NetworkResponse {
     private String walletAddress;
     private String privateKey;
     private double balance;
+    private Currency currency;
     private double currentBalance;
 }
