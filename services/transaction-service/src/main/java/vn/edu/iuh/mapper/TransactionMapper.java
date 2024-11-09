@@ -21,6 +21,7 @@ public class TransactionMapper {
                 .type(transaction.isType())
                 .fromAccount(fromAccount)
                 .toAccount(toAccount)
+                .hash(transaction.getHash())
                 .build();
     }
 }
