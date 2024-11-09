@@ -63,7 +63,7 @@ public class NetworkService {
         network.setPassword(request.getName());
         try {
             String password = request.getName();
-            File walletDirectory = new File("/wallet");
+            File walletDirectory = new File("./wallet");
             if (!walletDirectory.exists()) {
                 walletDirectory.mkdirs();
             }

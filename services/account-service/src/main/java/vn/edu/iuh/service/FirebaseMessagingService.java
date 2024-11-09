@@ -34,6 +34,12 @@ public class FirebaseMessagingService {
                 .map(FcmToken::getFcmToken)
                 .toList();
         
+        if (registrationTokens.isEmpty()) {
+            log.error("No token found for account: {}", notificationMessage.getAccountId());
+            notificationHistoryService.saveNotificationHistory(notificationMessage);
+            return;
+        }
+        
         registrationTokens.forEach(token -> {
             Message message = Message.builder()
                     .setNotification(notification)
@@ -46,7 +52,8 @@ public class FirebaseMessagingService {
 
                 notificationHistoryService.saveNotificationHistory(notificationMessage);
             } catch (FirebaseMessagingException e) {
-                log.error("Error sending message to token: {}", token);
+                notificationHistoryService.saveNotificationHistory(notificationMessage);
+                log.error("Error sending message to token: {}", token, e);
             }
         });
     }

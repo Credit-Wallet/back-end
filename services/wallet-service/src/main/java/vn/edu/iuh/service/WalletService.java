@@ -132,7 +132,7 @@ public class WalletService {
         var account = accountClient.getProfile(token).getResult();
         try {
             String password = account.getEmail();
-            File walletDirectory = new File("/wallet");
+            File walletDirectory = new File("./wallet");
             if (!walletDirectory.exists()) {
                 walletDirectory.mkdirs();
             }

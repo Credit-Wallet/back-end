@@ -24,4 +24,5 @@ public class TransactionResponse {
     private boolean type;
     private AccountResponse fromAccount;
     private AccountResponse toAccount;
+    private String hash;
 }
