@@ -9,6 +9,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.GET;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -32,11 +33,20 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NetworkController {
     private final NetworkService networkService;
+    @Value("${domain}")
+    private String domain;
 
     @GetMapping()
     public ApiResponse<?> getNetworks(@RequestHeader("Authorization") String token) {
         return ApiResponse.builder()
                 .result(networkService.getNetworks(token))
+                .build();
+    }
+
+    @GetMapping("/{uuid}/uuid")
+    public ApiResponse<NetworkResponse> getNetworkByUuid(@PathVariable("uuid") String uuid) {
+        return ApiResponse.<NetworkResponse>builder()
+                .result(networkService.getByUuid(uuid))
                 .build();
     }
 
@@ -55,10 +65,11 @@ public class NetworkController {
     }
 
     @PostMapping("/generate-qr")
-    public ResponseEntity<String> generateQRCode(@RequestParam("networkId") Long networkId) {
+    public ResponseEntity<String> generateQRCode(@RequestParam("networkId") Long networkId) throws IOException {
+        NetworkResponse network = networkService.getById(networkId);
         try {
-            String qrData = "/networks/join?networkId=" + networkId;
-
+            String qrData = domain + "/#/home/networks/" + network.getUuid() + "/join";
+            
             int width = 300;
             int height = 300;
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
@@ -86,6 +97,13 @@ public class NetworkController {
     public ApiResponse<NetworkResponse> findById(@PathVariable("id") Long id) throws IOException {
         return ApiResponse.<NetworkResponse>builder()
                 .result(networkService.getById(id))
+                .build();
+    }
+
+    @PostMapping("/join-uuid")
+    public ApiResponse<NetworkResponse> joinNetworkUuid(@RequestParam("networkUuid") String networkUuid, @RequestHeader("Authorization") String token) {
+        return ApiResponse.<NetworkResponse>builder()
+                .result(networkService.joinNetworkUuid(networkUuid, token))
                 .build();
     }
 }

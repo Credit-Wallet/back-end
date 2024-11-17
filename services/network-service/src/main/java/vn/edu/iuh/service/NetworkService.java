@@ -38,6 +38,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +61,7 @@ public class NetworkService {
 
     public Network createNetwork(CreateNetworkRequest request, String token) {
         Network network = networkMapper.toNetwork(request);
+        network.setUuid(java.util.UUID.randomUUID().toString());
         network.setPassword(request.getName());
         try {
             String password = request.getName();
@@ -159,6 +161,57 @@ public class NetworkService {
                 .currency(network.getCurrency())
                 .currentBalance(balanceOf.doubleValue())
                 .id(network.getId())
+                .uuid(network.getUuid())
+                .build();
+    }
+    
+    public NetworkResponse getByUuid(String uuid) {
+        Optional<Network> network = networkRepository.findByUuid(uuid);
+        if (network.isEmpty()) {
+            throw new AppException(ErrorCode.NOT_FOUND);
+        }
+        
+        return NetworkResponse.builder()
+                .name(network.get().getName())
+                .minBalance(network.get().getMinBalance())
+                .maxBalance(network.get().getMaxBalance())
+                .maxMember(network.get().getMaxMember())
+                .description(network.get().getDescription())
+                .walletAddress(network.get().getWalletAddress())
+                .privateKey(network.get().getPrivateKey())
+                .balance(network.get().getBalance())
+                .currency(network.get().getCurrency())
+                .currentBalance(network.get().getBalance())
+                .id(network.get().getId())
+                .uuid(network.get().getUuid())
+                .build();
+    }
+    
+    public NetworkResponse joinNetworkUuid(String uuid, String token) {
+        Optional<Network> network = networkRepository.findByUuid(uuid);
+        if (network.isEmpty()) {
+            throw new AppException(ErrorCode.NOT_FOUND);
+        }
+        
+        try {
+            walletClient.createWallet(network.get().getId(), token);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.ALREADY_EXISTS);
+        }
+        
+        return NetworkResponse.builder()
+                .name(network.get().getName())
+                .minBalance(network.get().getMinBalance())
+                .maxBalance(network.get().getMaxBalance())
+                .maxMember(network.get().getMaxMember())
+                .description(network.get().getDescription())
+                .walletAddress(network.get().getWalletAddress())
+                .privateKey(network.get().getPrivateKey())
+                .balance(network.get().getBalance())
+                .currency(network.get().getCurrency())
+                .currentBalance(network.get().getBalance())
+                .id(network.get().getId())
+                .uuid(network.get().getUuid())
                 .build();
     }
 }

@@ -19,6 +19,7 @@ public class Network {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String uuid;
     private String name;
     private String walletPath;
     private String walletAddress;
