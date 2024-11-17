@@ -12,6 +12,7 @@ import vn.edu.iuh.model.Currency;
 @Builder
 public class NetworkResponse {
     private Long id;
+    private String uuid;
     private String name;
     private double minBalance;
     private double maxBalance;

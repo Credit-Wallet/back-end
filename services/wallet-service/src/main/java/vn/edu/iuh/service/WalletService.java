@@ -154,7 +154,7 @@ public class WalletService {
                     .balance(0)
                     .build();
             if (walletRepository.existsByAccountIdAndNetworkId(wallet.getAccountId(), wallet.getNetworkId())) {
-                throw new AppException(ErrorCode.BAD_REQUEST);
+                throw new AppException(ErrorCode.ACCOUNT_EXISTED);
             }
             return walletRepository.save(wallet);
         } catch (Exception e) {
