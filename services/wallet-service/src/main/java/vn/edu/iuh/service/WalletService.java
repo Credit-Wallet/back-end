@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -89,6 +90,55 @@ public class WalletService {
                 .build();
     }
 
+    public boolean transferMoney(String token, Long toId, double amount) {
+        var user = accountClient.getProfile(token).getResult();
+        System.out.println("User: " + user.getId());
+        var fromWallet = walletRepository.findByAccountIdAndNetworkId(user.getId(), user.getSelectedNetworkId())
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+        System.out.println("From Wallet: " + fromWallet.getWalletAddress());
+        Wallet toWallet = walletRepository.findByAccountIdAndNetworkId(toId, user.getSelectedNetworkId()).
+                orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+        System.out.println("To Wallet: " + toWallet.getWalletAddress());
+        CompletableFuture.supplyAsync(() -> {
+            if (fromWallet.getBalance() > amount) {
+                sendBalance(user.getId(), user.getSelectedNetworkId(), amount);
+                receiveBalance(toId, user.getSelectedNetworkId(), amount);
+
+                if (toWallet.getDebt() < 0) {
+                    try {
+                        transfer(fromWallet.getAccountId(), toWallet.getAccountId(), user.getSelectedNetworkId(), amount);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    if (amount < toWallet.getDebt()) {
+                        try {
+                            transfer(fromWallet.getAccountId(), toWallet.getAccountId(), user.getSelectedNetworkId(), amount);
+                            transfer(toWallet.getAccountId(), 0L, user.getSelectedNetworkId(), amount);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        try {
+                            transfer(fromWallet.getAccountId(), toWallet.getAccountId(), user.getSelectedNetworkId(), amount);
+                            transfer(toWallet.getAccountId(), 0L, user.getSelectedNetworkId(), amount - toWallet.getDebt());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            }
+            else{
+                throw new AppException(ErrorCode.BALANCE_NOT_ENOUGH);
+            }
+            return true;
+        }).exceptionally(ex -> {
+            System.err.println("Error occurred: " + ex.getMessage());
+            return false;
+        });
+        return true;
+    }
+
     public String transfer(Long fromId, Long toId, Long networkId, double amount) throws Exception {
         var network = networkClient.getNetworkById(networkId).getResult();
         System.out.println("Network: " + network.getPrivateKey());
@@ -96,14 +146,14 @@ public class WalletService {
         String fromAddress = network.getWalletAddress();
         String toAddress = network.getWalletAddress();
         String privateKey = network.getPrivateKey();
-        if(fromId != 0L){
+        if (fromId != 0L) {
             Wallet from = walletRepository.findByAccountIdAndNetworkId(fromId, networkId)
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
 
             fromAddress = from.getWalletAddress();
             privateKey = from.getPrivateKey();
         }
-        if(toId != 0L){
+        if (toId != 0L) {
             Wallet to = walletRepository.findByAccountIdAndNetworkId(toId, networkId)
                     .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
             toAddress = to.getWalletAddress();
@@ -173,16 +223,16 @@ public class WalletService {
         System.out.println("Amount sender: " + amount);
         System.out.println("Balance of sender: " + wallet.getBalance());
         System.out.println("Debt of sender: " + wallet.getDebt());
-        if(wallet.getBalance() < amount){
-            if(wallet.getBalance() > 0){
+        if (wallet.getBalance() < amount) {
+            if (wallet.getBalance() > 0) {
                 double temp = amount - wallet.getBalance();
                 wallet.setDebt(wallet.getDebt() + temp);
                 wallet.setBalance(-temp);
-            }else{
+            } else {
                 wallet.setDebt(wallet.getDebt() + amount);
                 wallet.setBalance(wallet.getBalance() - amount);
             }
-        }else{
+        } else {
             wallet.setBalance(wallet.getBalance() - amount);
         }
         return walletRepository.save(wallet);
@@ -193,15 +243,15 @@ public class WalletService {
         System.out.println("Amount receiver: " + amount);
         System.out.println("Balance of receiver: " + wallet.getBalance());
         System.out.println("Debt of receiver: " + wallet.getDebt());
-        if(wallet.getDebt() > 0){
-            if(wallet.getDebt() > amount){
+        if (wallet.getDebt() > 0) {
+            if (wallet.getDebt() > amount) {
                 wallet.setDebt(wallet.getDebt() - amount);
                 wallet.setBalance(wallet.getBalance() + amount);
-            }else{
+            } else {
                 wallet.setDebt(0);
                 wallet.setBalance(wallet.getBalance() + amount);
             }
-        }else{
+        } else {
             wallet.setBalance(wallet.getBalance() + amount);
         }
         return walletRepository.save(wallet);

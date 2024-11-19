@@ -84,4 +84,12 @@ public class WalletController {
                 .result(walletService.getAccountIdsByNetwork(networkId,token))
                 .build();
     }
+
+    @PostMapping("/transfer-money")
+    public ApiResponse<?> transferMoney(@RequestHeader("Authorization") String token, @RequestParam("toId") Long toId,
+                               @RequestParam("amount") double amount) throws Exception {
+        return ApiResponse.builder()
+                .result(walletService.transferMoney(token, toId, amount))
+                .build();
+    }
 }
