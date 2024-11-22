@@ -133,8 +133,7 @@ public class WalletService {
             }
             return true;
         }).exceptionally(ex -> {
-            System.err.println("Error occurred: " + ex.getMessage());
-            return false;
+            throw new AppException(ErrorCode.BALANCE_NOT_ENOUGH);
         });
         return true;
     }
