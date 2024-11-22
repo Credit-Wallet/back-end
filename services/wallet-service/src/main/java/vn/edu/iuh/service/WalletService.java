@@ -17,14 +17,19 @@ import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
 import vn.edu.iuh.client.AccountClient;
 import vn.edu.iuh.client.NetworkClient;
+import vn.edu.iuh.client.TransactionClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
 import vn.edu.iuh.model.Wallet;
 import vn.edu.iuh.repository.WalletRepository;
+import vn.edu.iuh.request.CreateTransactionRequest;
+import vn.edu.iuh.request.UpdateTransactionRequest;
+import vn.edu.iuh.response.TransactionTransferResponse;
 import vn.edu.iuh.response.WalletResponse;
 
 import java.io.File;
@@ -41,6 +46,7 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final AccountClient accountClient;
     private final NetworkClient networkClient;
+    private final TransactionClient transactionClient;
     private final RestTemplate restTemplate;
     @Value("${blockchain.transfer.url}")
     private String transferUrl;
@@ -96,45 +102,70 @@ public class WalletService {
         var fromWallet = walletRepository.findByAccountIdAndNetworkId(user.getId(), user.getSelectedNetworkId())
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
         System.out.println("From Wallet: " + fromWallet.getWalletAddress());
-        Wallet toWallet = walletRepository.findByAccountIdAndNetworkId(toId, user.getSelectedNetworkId()).
-                orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+        Wallet toWallet = walletRepository.findByAccountIdAndNetworkId(toId, user.getSelectedNetworkId())
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
         System.out.println("To Wallet: " + toWallet.getWalletAddress());
-        CompletableFuture.supplyAsync(() -> {
-            if (fromWallet.getBalance() > amount) {
-                sendBalance(user.getId(), user.getSelectedNetworkId(), amount);
-                receiveBalance(toId, user.getSelectedNetworkId(), amount);
 
-                if (toWallet.getDebt() < 0) {
+        if (fromWallet.getBalance() <= amount) {
+            throw new AppException(ErrorCode.BALANCE_NOT_ENOUGH);
+        }
+
+        CompletableFuture.runAsync(() -> {
+            sendBalance(user.getId(), user.getSelectedNetworkId(), amount);
+            receiveBalance(toId, user.getSelectedNetworkId(), amount);
+
+            TransactionTransferResponse transactionIn = transactionClient.createTransaction(
+                    CreateTransactionRequest.builder()
+                            .accountId(user.getId())
+                            .networkId(user.getSelectedNetworkId())
+                            .amount(amount)
+                            .fromAccountId(user.getId())
+                            .toAccountId(toId)
+                            .type(false)
+                            .build()
+            ).getResult();
+            TransactionTransferResponse outTransaction = transactionClient.createTransaction(
+                    CreateTransactionRequest.builder()
+                            .accountId(toId)
+                            .networkId(user.getSelectedNetworkId())
+                            .amount(amount)
+                            .fromAccountId(user.getId())
+                            .toAccountId(toId)
+                            .type(true)
+                            .build()
+            ).getResult();
+
+            String hash = null;
+            if (toWallet.getDebt() < 0) {
+                try {
+                    hash = transfer(fromWallet.getAccountId(), toWallet.getAccountId(), user.getSelectedNetworkId(), amount);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                if (amount < toWallet.getDebt()) {
                     try {
-                        transfer(fromWallet.getAccountId(), toWallet.getAccountId(), user.getSelectedNetworkId(), amount);
+                        hash = transfer(fromWallet.getAccountId(), toWallet.getAccountId(), user.getSelectedNetworkId(), amount);
+                        transfer(toWallet.getAccountId(), 0L, user.getSelectedNetworkId(), amount);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    if (amount < toWallet.getDebt()) {
-                        try {
-                            transfer(fromWallet.getAccountId(), toWallet.getAccountId(), user.getSelectedNetworkId(), amount);
-                            transfer(toWallet.getAccountId(), 0L, user.getSelectedNetworkId(), amount);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    } else {
-                        try {
-                            transfer(fromWallet.getAccountId(), toWallet.getAccountId(), user.getSelectedNetworkId(), amount);
-                            transfer(toWallet.getAccountId(), 0L, user.getSelectedNetworkId(), amount - toWallet.getDebt());
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+                    try {
+                        hash = transfer(fromWallet.getAccountId(), toWallet.getAccountId(), user.getSelectedNetworkId(), amount);
+                        transfer(toWallet.getAccountId(), 0L, user.getSelectedNetworkId(), amount - toWallet.getDebt());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
                     }
                 }
             }
-            else{
-                throw new AppException(ErrorCode.BALANCE_NOT_ENOUGH);
-            }
-            return true;
-        }).exceptionally(ex -> {
-            throw new AppException(ErrorCode.BALANCE_NOT_ENOUGH);
+            System.out.println("Hash: " + hash);
+            transactionClient.updateTransaction(transactionIn.getId(), UpdateTransactionRequest.builder()
+                    .hash(hash).build());
+            transactionClient.updateTransaction(outTransaction.getId(), UpdateTransactionRequest.builder()
+                    .hash(hash).build());
         });
+
         return true;
     }
 

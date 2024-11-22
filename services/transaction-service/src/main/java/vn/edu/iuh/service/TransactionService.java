@@ -12,8 +12,11 @@ import vn.edu.iuh.exception.ErrorCode;
 import vn.edu.iuh.mapper.TransactionMapper;
 import vn.edu.iuh.model.Transaction;
 import vn.edu.iuh.repository.TransactionRepository;
+import vn.edu.iuh.request.CreateTransactionRequest;
+import vn.edu.iuh.request.UpdateTransactionRequest;
 import vn.edu.iuh.response.AccountResponse;
 import vn.edu.iuh.response.TransactionResponse;
+import vn.edu.iuh.response.TransactionTransferResponse;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -30,7 +33,7 @@ public class TransactionService {
 
         Pageable pageable = PageRequest.of(page, limit, Sort.by("createdAt").descending());
 
-        var transactions =  transactionRepository.findByAccountIdAndNetworkIdAndTimestampBetween(
+        var transactions = transactionRepository.findByAccountIdAndNetworkIdAndTimestampBetween(
                 account.getId(),
                 account.getSelectedNetworkId(),
                 fromDate,
@@ -52,10 +55,49 @@ public class TransactionService {
         );
     }
 
-    public TransactionResponse getTransactionById(Long id){
+    public TransactionResponse getTransactionById(Long id) {
         Transaction transaction = findById(id);
         AccountResponse fromAccount = accountClient.getAccountById(transaction.getFromAccountId()).getResult();
         AccountResponse toAccount = accountClient.getAccountById(transaction.getToAccountId()).getResult();
         return transactionMapper.toResponse(transaction, fromAccount, toAccount);
+    }
+
+    public TransactionTransferResponse createTransaction(CreateTransactionRequest transaction) {
+        Transaction savedTran = transactionRepository.save(Transaction.builder()
+                .accountId(transaction.getAccountId())
+                .networkId(transaction.getNetworkId())
+                .fromAccountId(transaction.getFromAccountId())
+                .toAccountId(transaction.getToAccountId())
+                .amount(transaction.getAmount())
+                .type(transaction.isType())
+                .build());
+        return TransactionTransferResponse.builder()
+                .id(savedTran.getId())
+                .accountId(savedTran.getAccountId())
+                .networkId(savedTran.getNetworkId())
+                .fromAccountId(savedTran.getFromAccountId())
+                .toAccountId(savedTran.getToAccountId())
+                .amount(savedTran.getAmount())
+                .createdAt(savedTran.getCreatedAt())
+                .type(savedTran.isType())
+                .hash(savedTran.getHash())
+                .build();
+    }
+
+    public TransactionTransferResponse updateTransaction(Long id, UpdateTransactionRequest transaction) {
+        Transaction transactionToUpdate = findById(id);
+        transactionToUpdate.setHash(transaction.getHash());
+        Transaction savedTran = transactionRepository.save(transactionToUpdate);
+        return TransactionTransferResponse.builder()
+                .id(savedTran.getId())
+                .accountId(savedTran.getAccountId())
+                .networkId(savedTran.getNetworkId())
+                .fromAccountId(savedTran.getFromAccountId())
+                .toAccountId(savedTran.getToAccountId())
+                .amount(savedTran.getAmount())
+                .createdAt(savedTran.getCreatedAt())
+                .type(savedTran.isType())
+                .hash(savedTran.getHash())
+                .build();
     }
 }
