@@ -88,6 +88,8 @@ public class WalletController {
     @PostMapping("/transfer-money")
     public ApiResponse<?> transferMoney(@RequestHeader("Authorization") String token, @RequestParam("toId") Long toId,
                                @RequestParam("amount") double amount) throws Exception {
-        return walletService.transferMoney(token, toId, amount);
+        return ApiResponse.builder()
+                .result(walletService.transferMoney(token, toId, amount))
+                .build();
     }
 }

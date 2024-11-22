@@ -25,7 +25,6 @@ import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
 import vn.edu.iuh.model.Wallet;
 import vn.edu.iuh.repository.WalletRepository;
-import vn.edu.iuh.response.ApiResponse;
 import vn.edu.iuh.response.WalletResponse;
 
 import java.io.File;
@@ -91,7 +90,7 @@ public class WalletService {
                 .build();
     }
 
-    public ApiResponse<?> transferMoney(String token, Long toId, double amount) {
+    public boolean transferMoney(String token, Long toId, double amount) {
         var user = accountClient.getProfile(token).getResult();
         System.out.println("User: " + user.getId());
         var fromWallet = walletRepository.findByAccountIdAndNetworkId(user.getId(), user.getSelectedNetworkId())
@@ -100,8 +99,7 @@ public class WalletService {
         Wallet toWallet = walletRepository.findByAccountIdAndNetworkId(toId, user.getSelectedNetworkId()).
                 orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
         System.out.println("To Wallet: " + toWallet.getWalletAddress());
-
-        CompletableFuture<Boolean> task = CompletableFuture.supplyAsync(() -> {
+        CompletableFuture.supplyAsync(() -> {
             if (fromWallet.getBalance() > amount) {
                 sendBalance(user.getId(), user.getSelectedNetworkId(), amount);
                 receiveBalance(toId, user.getSelectedNetworkId(), amount);
@@ -129,28 +127,16 @@ public class WalletService {
                         }
                     }
                 }
-            } else {
+            }
+            else{
                 throw new AppException(ErrorCode.BALANCE_NOT_ENOUGH);
             }
             return true;
-        });
-
-        try {
-            task.get(); // Wait for the task to complete and return its result
-
-            return ApiResponse.builder()
-                    .result(true)
-                    .code(200)
-                    .message("transfer success")
-                    .build();
-        } catch (Exception ex) {
+        }).exceptionally(ex -> {
             System.err.println("Error occurred: " + ex.getMessage());
-            return ApiResponse.builder()
-                    .result(false)
-                    .code(400)
-                    .message(ex.getMessage())
-                    .build();
-        }
+            return false;
+        });
+        return true;
     }
 
     public String transfer(Long fromId, Long toId, Long networkId, double amount) throws Exception {
