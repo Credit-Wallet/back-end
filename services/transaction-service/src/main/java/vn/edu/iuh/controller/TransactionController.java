@@ -5,8 +5,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.model.Transaction;
+import vn.edu.iuh.request.CreateTransactionRequest;
+import vn.edu.iuh.request.UpdateTransactionRequest;
 import vn.edu.iuh.response.ApiResponse;
 import vn.edu.iuh.response.TransactionResponse;
+import vn.edu.iuh.response.TransactionTransferResponse;
 import vn.edu.iuh.service.TransactionService;
 
 import java.sql.Timestamp;
@@ -37,6 +40,20 @@ public class TransactionController {
         var result = transactionService.getTransactionById(id);
         return ApiResponse.<TransactionResponse>builder()
                 .result(result)
+                .build();
+    }
+
+    @PostMapping()
+    public ApiResponse<TransactionTransferResponse> createTransaction(@RequestBody CreateTransactionRequest transaction) {
+        return ApiResponse.<TransactionTransferResponse>builder()
+                .result(transactionService.createTransaction(transaction))
+                .build();
+    }
+
+    @PutMapping("/{id}")
+    public ApiResponse<TransactionTransferResponse> updateTransaction(@PathVariable Long id, @RequestBody UpdateTransactionRequest transaction) {
+        return ApiResponse.<TransactionTransferResponse>builder()
+                .result(transactionService.updateTransaction(id, transaction))
                 .build();
     }
 }
