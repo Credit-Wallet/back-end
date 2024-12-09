@@ -11,4 +11,7 @@ public interface TransactionClient {
     //get bill request by id
     @GetMapping("/bill-requests/{id}")
     ApiResponse<BillRequestResponse> getBillRequest(@PathVariable("id") Long id);
+
+    @GetMapping("/bill-requests/{id}/ver-2")
+    ApiResponse<BillRequestResponse> getBillRequestV2(@PathVariable("id") Long id);
 }
