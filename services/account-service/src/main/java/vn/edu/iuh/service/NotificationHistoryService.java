@@ -57,10 +57,10 @@ public class NotificationHistoryService {
                 Map<String, String> data = convertStringToMap(notification.getData());
                 log.info("data: " + data);
                 
-                var accountResponse = authService.getAccountById(notification.getAccountId());
-                var billRequestResponse = transactionClient.getBillRequest(Long.parseLong(data.get("billRequestId"))).getResult();
-                var networkResponse = networkClient.getNetwork(Long.parseLong(data.get("networkId"))).getResult();
-                return notificationMapper.toNotificationResponse(notification, accountResponse, billRequestResponse, networkResponse);
+//                var accountResponse = authService.getAccountById(notification.getAccountId());
+                var billRequestResponse = transactionClient.getBillRequestV2(Long.parseLong(data.get("billRequestId"))).getResult();
+//                var networkResponse = networkClient.getNetwork(Long.parseLong(data.get("networkId"))).getResult();
+                return notificationMapper.toNotificationResponse(notification, null, billRequestResponse, null);
             } else {
                 return notificationMapper.toNotificationResponse(notification, null, null, null);
             }

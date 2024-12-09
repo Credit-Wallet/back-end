@@ -11,10 +11,12 @@ import vn.edu.iuh.client.NetworkClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
 import vn.edu.iuh.mapper.BillRequestMapper;
+import vn.edu.iuh.mapper.BillRequestMapperV2;
 import vn.edu.iuh.model.BillRequest;
 import vn.edu.iuh.model.Status;
 import vn.edu.iuh.repository.BillRequestRepository;
 import vn.edu.iuh.response.BillRequestResponse;
+import vn.edu.iuh.response.BillRequestResponseV2;
 
 import java.sql.Timestamp;
 
@@ -25,6 +27,7 @@ public class BillRequestService {
     private final AccountClient accountClient;
     private final BillRequestMapper billRequestMapper;
     private final NetworkClient networkClient;
+    private final BillRequestMapperV2 billRequestMapperV2;
 
     public Page<BillRequestResponse> getBillRequests(String token, Timestamp fromDate, Timestamp toDate, Status status, int page, int limit) {
         var account = accountClient.getProfile(token).getResult();
@@ -53,6 +56,11 @@ public class BillRequestService {
         var accountResponse = accountClient.getAccountById(billRequest.getAccountId()).getResult();
         var networkResponse = networkClient.getNetworkById(billRequest.getBill().getNetworkId()).getResult();
         return billRequestMapper.toBillRequestResponse(billRequest, accountResponse, networkResponse);
+    }
+
+    public BillRequestResponseV2 getBillRequestByIdV2(Long id) {
+        var billRequest = findById(id);
+        return billRequestMapperV2.toBillRequestResponse(billRequest);
     }
 
 }
