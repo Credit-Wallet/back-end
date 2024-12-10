@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoginResponse {
-    private String token;
-    private boolean isTwoFactor;
+public class TwoFactorAuthResponse {
+    private String secretKey;
+    private String qrCodeBase64Image;
 }

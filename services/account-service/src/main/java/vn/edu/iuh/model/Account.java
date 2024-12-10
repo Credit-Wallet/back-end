@@ -24,6 +24,8 @@ public class Account {
     private String email;
     private String password;
     private Long selectedNetworkId;
+    private boolean isTwoFactor;
+    private String secretKey;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<FcmToken> fcmTokens = new ArrayList<>();
