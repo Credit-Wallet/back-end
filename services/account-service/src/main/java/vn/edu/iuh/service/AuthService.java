@@ -72,7 +72,7 @@ public class AuthService {
 
         var token = generateToken(account);
 
-        return LoginResponse.builder().token(token).build();
+        return LoginResponse.builder().token(token).isTwoFactor(account.isTwoFactor()).build();
     }
 
     private String generateToken(Account account) {
@@ -228,6 +228,21 @@ public class AuthService {
                 .code(204)
                 .message("Email updated")
                 .result(email)
+                .build();
+    }
+    
+    //updateIsTwoFactor
+    public ApiResponse<?> updateIsTwoFactor(String jwtToken) {
+        jwtToken = jwtToken.substring(7);
+        String email = extractEmail(jwtToken);
+        Account account = findByEmail(email);
+        boolean isTwoFactor = account.isTwoFactor();
+        account.setTwoFactor(!isTwoFactor);
+        accountRepository.save(account);
+        return ApiResponse.builder()
+                .code(200)
+                .message("IsTwoFactor updated")
+                .result(!isTwoFactor)
                 .build();
     }
 }

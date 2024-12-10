@@ -33,7 +33,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/eureka/**",
             "/api/v1/auth/login",
             "/api/v1/auth/register",
-            "/api/v1/uploads/**"
+            "/api/v1/uploads/**",
+            "/api/v1/auth/validate-two-factor"
     );
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     private final ObjectMapper objectMapper;

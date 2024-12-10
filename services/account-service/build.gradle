@@ -48,6 +48,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 	implementation 'io.swagger:swagger-annotations:1.6.14'
+
+    // https://mvnrepository.com/artifact/com.warrenstrange/googleauth
+    implementation 'com.warrenstrange:googleauth:1.2.0'
+    // https://mvnrepository.com/artifact/com.google.zxing/core
+    implementation 'com.google.zxing:core:3.3.3'
 }
 
 dependencyManagement {

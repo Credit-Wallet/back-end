@@ -22,6 +22,7 @@ public class AccountMapper {
                 .email(account.getEmail())
                 .selectedNetworkId(account.getSelectedNetworkId())
                 .urlAvatar(account.getUrlAvatar())
+                .isTwoFactor(account.isTwoFactor())
                 .build();
     }
 }

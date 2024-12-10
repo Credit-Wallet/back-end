@@ -16,4 +16,6 @@ public class AccountResponse {
     private String email;
     private Long selectedNetworkId;
     private String urlAvatar;
+    private boolean isTwoFactor;
+    private String secretKey;
 }

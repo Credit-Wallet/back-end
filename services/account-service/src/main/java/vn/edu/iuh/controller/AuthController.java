@@ -177,4 +177,10 @@ public class AuthController {
     public ApiResponse<?> updateEmail(@RequestBody String email, @RequestHeader("Authorization") String token) {
         return authService.updateEmail(email, token);
     }
+    
+    //update isTwoFactor
+    @PostMapping("/update-is-two-factor")
+    public ApiResponse<?> updateIsTwoFactor(@RequestHeader("Authorization") String token) {
+        return authService.updateIsTwoFactor(token);
+    }
 }
