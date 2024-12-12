@@ -106,4 +106,11 @@ public class NetworkController {
                 .result(networkService.joinNetworkUuid(networkUuid, token))
                 .build();
     }
+
+    @DeleteMapping("leave")
+    public ApiResponse<?> leaveNetwork(@RequestHeader("Authorization") String token) {
+        return ApiResponse.builder()
+                .result(networkService.leaveNetwork(token))
+                .build();
+    }
 }

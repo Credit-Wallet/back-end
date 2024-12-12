@@ -22,6 +22,7 @@ import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Convert;
+import vn.edu.iuh.client.AccountClient;
 import vn.edu.iuh.client.WalletClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
@@ -29,6 +30,8 @@ import vn.edu.iuh.mapper.NetworkMapper;
 import vn.edu.iuh.model.Network;
 import vn.edu.iuh.repository.NetworkRepository;
 import vn.edu.iuh.request.CreateNetworkRequest;
+import vn.edu.iuh.response.AccountResponse;
+import vn.edu.iuh.response.ApiResponse;
 import vn.edu.iuh.response.NetworkResponse;
 
 import java.io.File;
@@ -47,6 +50,7 @@ public class NetworkService {
     private final NetworkRepository networkRepository;
     private final NetworkMapper networkMapper;
     private final WalletClient walletClient;
+    private final AccountClient accountClient;
     @Value("${blockchain.infura-url}")
     private String infuraUrl;
     @Value("${blockchain.contract-address}")
@@ -213,5 +217,14 @@ public class NetworkService {
                 .id(network.get().getId())
                 .uuid(network.get().getUuid())
                 .build();
+    }
+
+    public Object leaveNetwork(String token) {
+        AccountResponse account = accountClient.getProfile(token).getResult();
+        boolean result = walletClient.leaveNetwork(account.getId(), account.getSelectedNetworkId());
+        if(result)
+            return true;
+        else
+            throw new AppException(ErrorCode.CANT_LEAVE_NETWORK);
     }
 }

@@ -1,10 +1,7 @@
 package vn.edu.iuh.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import vn.edu.iuh.response.ApiResponse;
 
 import java.util.List;
@@ -17,5 +14,9 @@ public interface WalletClient {
 
     @GetMapping("/wallets/network_ids")
     ApiResponse<List<Long>> getNetworkIdsByAccount(@RequestHeader("Authorization") String token);
+
+    @DeleteMapping("/wallets/leave")
+    boolean leaveNetwork(@RequestParam("accountId") Long accountId, @RequestParam("networkId") Long networkId);
+
 
 }
