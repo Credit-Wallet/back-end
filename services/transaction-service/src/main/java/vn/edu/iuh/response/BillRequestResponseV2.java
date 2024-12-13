@@ -18,4 +18,5 @@ public class BillRequestResponseV2 {
     private Status status;
     private String description;
     private String createdAt;
+    private Bill bill;
 }

@@ -92,4 +92,9 @@ public class WalletController {
                 .result(walletService.transferMoney(token, toId, amount))
                 .build();
     }
+
+    @DeleteMapping("/leave")
+    public boolean leaveNetwork(@RequestParam("accountId") Long accountId, @RequestParam("networkId") Long networkId){
+        return walletService.leaveNetwork(accountId, networkId);
+    }
 }

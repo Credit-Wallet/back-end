@@ -18,6 +18,7 @@ public class BillRequestMapperV2 {
                 .status(billRequest.getStatus())
                 .description(billRequest.getDescription())
                 .createdAt(billRequest.getCreatedAt().toString())
+                .bill(billRequest.getBill())
                 .build();
     }
 }

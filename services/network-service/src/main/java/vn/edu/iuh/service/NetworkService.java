@@ -22,6 +22,7 @@ import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Convert;
+import vn.edu.iuh.client.AccountClient;
 import vn.edu.iuh.client.WalletClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
@@ -29,6 +30,8 @@ import vn.edu.iuh.mapper.NetworkMapper;
 import vn.edu.iuh.model.Network;
 import vn.edu.iuh.repository.NetworkRepository;
 import vn.edu.iuh.request.CreateNetworkRequest;
+import vn.edu.iuh.response.AccountResponse;
+import vn.edu.iuh.response.ApiResponse;
 import vn.edu.iuh.response.NetworkResponse;
 
 import java.io.File;
@@ -39,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +51,7 @@ public class NetworkService {
     private final NetworkRepository networkRepository;
     private final NetworkMapper networkMapper;
     private final WalletClient walletClient;
+    private final AccountClient accountClient;
     @Value("${blockchain.infura-url}")
     private String infuraUrl;
     @Value("${blockchain.contract-address}")
@@ -60,30 +65,36 @@ public class NetworkService {
     }
 
     public Network createNetwork(CreateNetworkRequest request, String token) {
+// Create in database
         Network network = networkMapper.toNetwork(request);
         network.setUuid(java.util.UUID.randomUUID().toString());
         network.setPassword(request.getName());
-        try {
-            String password = request.getName();
-            File walletDirectory = new File("./wallet");
-            if (!walletDirectory.exists()) {
-                walletDirectory.mkdirs();
-            }
-            String walletFileName = WalletUtils.generateNewWalletFile(password, walletDirectory, true);
-            Credentials credentials = WalletUtils.loadCredentials(password, new File(walletDirectory, walletFileName));
-            System.out.println("Wallet Address: " + credentials.getAddress());
-            System.out.println("Private Key: " + credentials.getEcKeyPair().getPrivateKey().toString(16));
-            network.setWalletAddress(credentials.getAddress());
-            network.setPrivateKey(credentials.getEcKeyPair().getPrivateKey().toString(16));
-            network.setWalletPath(walletFileName);
-            var balance = network.getMaxBalance() * network.getMaxMember();
-            network.setBalance(balance);
-            transferTokens(network.getWalletAddress(), balance, rootPrivateKey);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         var savedNetwork = networkRepository.save(network);
         walletClient.createWallet(savedNetwork.getId(), token);
+
+// Create in blockchain asynchronously
+        CompletableFuture.runAsync(() -> {
+            try {
+                String password = request.getName();
+                File walletDirectory = new File("./wallet");
+                if (!walletDirectory.exists()) {
+                    walletDirectory.mkdirs();
+                }
+                String walletFileName = WalletUtils.generateNewWalletFile(password, walletDirectory, true);
+                Credentials credentials = WalletUtils.loadCredentials(password, new File(walletDirectory, walletFileName));
+                System.out.println("Wallet Address: " + credentials.getAddress());
+                System.out.println("Private Key: " + credentials.getEcKeyPair().getPrivateKey().toString(16));
+                savedNetwork.setWalletAddress(credentials.getAddress());
+                savedNetwork.setPrivateKey(credentials.getEcKeyPair().getPrivateKey().toString(16));
+                savedNetwork.setWalletPath(walletFileName);
+                var balance = savedNetwork.getMaxBalance() * savedNetwork.getMaxMember();
+                savedNetwork.setBalance(balance);
+                transferTokens(savedNetwork.getWalletAddress(), balance, rootPrivateKey);
+                networkRepository.save(savedNetwork);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
         return savedNetwork;
     }
 
@@ -103,7 +114,7 @@ public class NetworkService {
         );
 
         String encodedFunction = FunctionEncoder.encode(function);
-
+        System.out.println("Transfer "+ amountInWei+ " tokens to "+ recipientAddress);
         EthSendTransaction transactionResponse = transactionManager.sendTransaction(
                 gasProvider.getGasPrice(),
                 gasProvider.getGasLimit(),
@@ -213,5 +224,14 @@ public class NetworkService {
                 .id(network.get().getId())
                 .uuid(network.get().getUuid())
                 .build();
+    }
+
+    public Object leaveNetwork(String token) {
+        AccountResponse account = accountClient.getProfile(token).getResult();
+        boolean result = walletClient.leaveNetwork(account.getId(), account.getSelectedNetworkId());
+        if(result)
+            return true;
+        else
+            throw new AppException(ErrorCode.CANT_LEAVE_NETWORK);
     }
 }

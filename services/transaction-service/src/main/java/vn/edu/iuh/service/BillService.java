@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import vn.edu.iuh.client.AccountClient;
+import vn.edu.iuh.client.NetworkClient;
 import vn.edu.iuh.client.WalletClient;
 import vn.edu.iuh.exception.AppException;
 import vn.edu.iuh.exception.ErrorCode;
@@ -26,6 +27,8 @@ import vn.edu.iuh.request.CancelBillRequest;
 import vn.edu.iuh.request.CreateBillRequest;
 import vn.edu.iuh.request.NotificationMessageRequest;
 import vn.edu.iuh.response.BillResponse;
+import vn.edu.iuh.response.NetworkResponse;
+import vn.edu.iuh.response.WalletResponse;
 
 import java.sql.Timestamp;
 import java.util.HashSet;
@@ -44,6 +47,7 @@ public class BillService {
     private final BillRepository billRepository;
     private final BillRequestRepository billRequestRepository;
     private final WalletClient walletClient;
+    private final NetworkClient networkClient;
     private final BillRequestMapper billRequestMapper;
     private final TransactionMapper transactionMapper;
 
@@ -155,6 +159,10 @@ public class BillService {
                 .findByBillAndAccountId(bill, account.getId()).orElseThrow(
                         () -> new AppException(ErrorCode.NOT_FOUND)
                 );
+        NetworkResponse network = networkClient.getNetworkById(bill.getNetworkId()).getResult();
+        WalletResponse wallet = walletClient.getWallet(billRequest.getAccountId(), bill.getNetworkId()).getResult();
+        if(wallet.getBalance() - billRequest.getAmount() < -network.getMinBalance())
+            throw new AppException(ErrorCode.MIN_BALANCE);
         billRequest.setStatus(Status.COMPLETED);
         billRequestRepository.save(billRequest);
         return billRepository.save(bill);

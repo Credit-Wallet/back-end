@@ -302,4 +302,14 @@ public class WalletService {
                 .filter(accountId -> !accountId.equals(account.getId()))
                 .collect(Collectors.toList());
     }
+
+    public boolean leaveNetwork(Long accountId,Long networkId) {
+        Wallet wallet = walletRepository.findByAccountIdAndNetworkId(accountId,networkId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+        if(wallet.getBalance() != 0){
+            return false;
+        }
+        walletRepository.delete(wallet);
+        return true;
+    }
 }

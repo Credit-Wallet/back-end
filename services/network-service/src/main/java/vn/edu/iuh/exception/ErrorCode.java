@@ -15,6 +15,7 @@ public enum ErrorCode {
     ACCOUNT_NOT_FOUND(404, "Account not found", HttpStatus.NOT_FOUND),
     PASSWORD_NOT_MATCH(400, "Password not match", HttpStatus.BAD_REQUEST),
     ACCOUNT_EXISTED(400, "Account existed", HttpStatus.BAD_REQUEST),
+    CANT_LEAVE_NETWORK(400, "Can't leave network", HttpStatus.BAD_REQUEST),
     ALREADY_EXISTS(409, "Already exists", HttpStatus.CONFLICT);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
