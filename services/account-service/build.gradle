@@ -53,6 +53,10 @@ dependencies {
     implementation 'com.warrenstrange:googleauth:1.2.0'
     // https://mvnrepository.com/artifact/com.google.zxing/core
     implementation 'com.google.zxing:core:3.3.3'
+    // https://mvnrepository.com/artifact/net.coobird/thumbnailator
+    implementation 'net.coobird:thumbnailator:0.4.20'
+    //spring-test
+    implementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 dependencyManagement {

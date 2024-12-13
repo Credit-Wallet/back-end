@@ -3,10 +3,12 @@ package vn.edu.iuh.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +26,10 @@ import vn.edu.iuh.service.AuthService;
 import vn.edu.iuh.service.FileStorageService;
 import vn.edu.iuh.service.FirebaseMessagingService;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -124,15 +128,32 @@ public class AuthController {
     public ApiResponse<?> uploadAvatar(
             @RequestParam(name = "file", required = false) MultipartFile file,
             @RequestHeader("Authorization") String token
-    ) {
-        if (file.getSize() > 1024 * 1024) {
+    ) throws IOException {
+        if (file.getSize() > 1024 * 1024 * 10) {
             return ApiResponse.builder()
                     .code(HttpStatus.BAD_REQUEST.value())
-                    .message("File size must be less than 1MB")
+                    .message("File size must be less than 10MB")
                     .build();
         }
 
-        String fileName = fileStorageService.storeFile(file);
+        // nén ảnh cho kích thước nhỏ hơn
+        InputStream originalImage = file.getInputStream(); // Đọc file gốc
+        ByteArrayOutputStream compressedImageOutputStream = new ByteArrayOutputStream();
+        Thumbnails.of(originalImage)
+                .scale(1.0) // Không thay đổi kích thước (giữ nguyên)
+                .outputQuality(0.8) // Giảm chất lượng ảnh xuống 80%
+                .toOutputStream(compressedImageOutputStream);
+
+        // Tạo MultipartFile mới từ ảnh đã nén
+        byte[] compressedImageBytes = compressedImageOutputStream.toByteArray();
+        MultipartFile compressedFile = new MockMultipartFile(
+                file.getName(), // Tên trường
+                file.getOriginalFilename(), // Tên file gốc
+                file.getContentType(), // Loại file
+                compressedImageBytes // Nội dung file đã nén
+        );
+
+        String fileName = fileStorageService.storeFile(compressedFile);
         boolean result = authService.saveAvatar(fileName, token);
 
         if (result) {
