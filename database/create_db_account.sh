@@ -78,7 +78,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Records of accounts
 -- ----------------------------
 INSERT INTO `accounts` (`id`, `created_at`, `email`, `is_two_factor`, `password`, `secret_key`, `selected_network_id`, `updated_at`, `url_avatar`, `username`) VALUES (1, '2024-12-20 15:46:35.338469', 'an@yopmail.com', b'0', '$2a$10$rqJ2GH4XHI56iDDEqbTIeuicK7jvFK3vCcFy7dDOpUZZtQKTGVLu6', NULL, NULL, '2024-12-20 15:46:35.338615', NULL, 'Phan Hoài An');
-INSERT INTO `accounts` (`id`, `created_at`, `email`, `is_two_factor`, `password`, `secret_key`, `selected_network_id`, `updated_at`, `url_avatar`, `username`) VALUES (2, '2024-12-20 15:47:31.435666', 'tien@yopmal.com', b'0', '$2a$10$BuXHBz1fbU6/NTc3zK5U.uns56BLMVN8QWc3kV4Ss5/IrCMC1CkxW', NULL, NULL, '2024-12-20 15:47:31.435685', NULL, 'Nguyễn Văn TIển');
+INSERT INTO `accounts` (`id`, `created_at`, `email`, `is_two_factor`, `password`, `secret_key`, `selected_network_id`, `updated_at`, `url_avatar`, `username`) VALUES (2, '2024-12-20 15:47:31.435666', 'tien@yopmail.com', b'0', '$2a$10$BuXHBz1fbU6/NTc3zK5U.uns56BLMVN8QWc3kV4Ss5/IrCMC1CkxW', NULL, NULL, '2024-12-20 15:47:31.435685', NULL, 'Nguyễn Văn TIển');
 
 INSERT INTO `notification_histories` (`id`, `account_id`, `body`, `created_at`, `data`, `image`, `is_read`, `title`, `type`, `updated_at`) VALUES (1, 1, 'Số tiền cần thanh toán: 50000.0', '2024-12-20 08:50:30.918955', '{billId=1, billRequestId=1, networkId=1}', NULL, b'1', 'Bạn có một yêu cầu thanh toán mới từ Nguyễn Văn TIển', 'BILL_REQUEST', '2024-12-20 08:50:38.690941');
 EOF

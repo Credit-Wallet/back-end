@@ -11,10 +11,15 @@ Write the firebase configuration in the `firebase.properties` file.
 # Run the project
 1. Run the following command to start the project.
 ```shell
-docker-compose up -d
+docker-compose up -d mysql rabbitmq
 ```
-2. Create database `account`, `network`, `transaction`, `wallet` in the MySQL database.
+2. Create database
+```shell
+cd database
+chmod +x create_db.sh
+./create_db.sh
+```
 3. Restart the project.
 ```shell
-docker-compose restart
+docker-compose up -d
 ```
