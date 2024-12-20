@@ -1,5 +1,6 @@
 .env
 .idea
 .docker/data/db
+wallet/
 services/account-service/src/main/resources/firebase.properties
 services/account-service/src/main/resources/uploads
